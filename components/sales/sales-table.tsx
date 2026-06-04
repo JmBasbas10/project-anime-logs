@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Pagination } from '@/components/ui/pagination'
+import { useArchive } from '@/lib/use-archive'
 
 export interface SaleCharacter {
   id: string
@@ -27,8 +28,15 @@ export interface CharacterSale {
 
 function fmt(iso: string) { return new Date(iso).toLocaleString() }
 
-function SaleModal({ sale }: { sale: CharacterSale }) {
+function SaleModal({ sale, isArchived, onToggle }: {
+  sale: CharacterSale
+  isArchived: boolean
+  onToggle: () => Promise<void>
+}) {
   const chars = sale.characters ?? []
+  const [loading, setLoading] = useState(false)
+  async function handle() { setLoading(true); await onToggle(); setLoading(false) }
+
   return (
     <>
       <div className="modal-header">
@@ -43,6 +51,7 @@ function SaleModal({ sale }: { sale: CharacterSale }) {
             }`}>
               {sale.sale_type}
             </span>
+            {isArchived && <span className="badge bg-warning-subtle text-warning-emphasis ms-1">Archived</span>}
           </span>
         </div>
         <button type="button" className="btn-close" data-bs-dismiss="modal" />
@@ -101,7 +110,11 @@ function SaleModal({ sale }: { sale: CharacterSale }) {
           </table>
         )}
       </div>
-      <div className="modal-footer">
+      <div className="modal-footer justify-content-between">
+        <button className={`btn btn-sm ${isArchived ? 'btn-outline-success' : 'btn-outline-warning'}`}
+          onClick={handle} disabled={loading}>
+          {loading ? '…' : isArchived ? '↩ Unarchive' : '🗄 Archive'}
+        </button>
         <button className="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
       </div>
     </>
@@ -115,14 +128,14 @@ export function SalesTable({ sales }: Props) {
   const [search, setSearch]     = useState('')
   const [page, setPage]         = useState(1)
   const [perPage, setPerPage]   = useState(10)
+  const { archivedIds, showArchived, setShowArchived, toggle, visible, count } = useArchive('character_sales', sales)
 
-  const filtered = search.trim()
-    ? sales.filter(s =>
-        s.player_name.toLowerCase().includes(search.toLowerCase()) ||
-        String(s.player_id).includes(search) ||
-        (s.characters ?? []).some(c => c.character_name.toLowerCase().includes(search.toLowerCase()))
-      )
-    : sales
+  const filtered = sales
+    .filter(visible)
+    .filter(s => !search.trim() ||
+      s.player_name.toLowerCase().includes(search.toLowerCase()) ||
+      String(s.player_id).includes(search) ||
+      (s.characters ?? []).some(c => c.character_name.toLowerCase().includes(search.toLowerCase())))
 
   const paginated = filtered.slice((page - 1) * perPage, page * perPage)
 
@@ -131,17 +144,18 @@ export function SalesTable({ sales }: Props) {
       <div className="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2"
            style={{ borderBottom: '1px solid var(--bs-border-color)', paddingBottom: 12 }}>
         <span className="fw-medium" style={{ fontSize: 14 }}>
-          All Sales <span className="badge bg-secondary ms-1">{sales.length}</span>
+          {showArchived ? 'Archived' : 'Active'} Sales <span className="badge bg-secondary ms-1">{filtered.length}</span>
         </span>
-        <div className="input-group input-group-sm" style={{ width: 260 }}>
-          <span className="input-group-text bg-transparent">🔍</span>
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Search player or character…"
-            value={search}
-            onChange={e => { setSearch(e.target.value); setPage(1) }}
-          />
+        <div className="d-flex gap-2 flex-wrap">
+          <div className="input-group input-group-sm" style={{ width: 220 }}>
+            <span className="input-group-text bg-transparent">🔍</span>
+            <input type="text" className="form-control" placeholder="Search player or character…"
+              value={search} onChange={e => { setSearch(e.target.value); setPage(1) }} />
+          </div>
+          <button className={`btn btn-sm ${showArchived ? 'btn-warning' : 'btn-outline-secondary'}`}
+            onClick={() => { setShowArchived(v => !v); setPage(1) }}>
+            🗄 {showArchived ? `Archived (${count})` : `Archive (${count})`}
+          </button>
         </div>
       </div>
 
@@ -154,7 +168,7 @@ export function SalesTable({ sales }: Props) {
               <th>Type</th>
               <th className="text-end">Sold</th>
               <th className="text-end">Cash Received</th>
-              <th>Time</th>
+              <th className="d-none d-md-table-cell">Time</th>
               <th style={{ width: 60 }}></th>
             </tr>
           </thead>
@@ -163,7 +177,7 @@ export function SalesTable({ sales }: Props) {
               <tr><td colSpan={7} className="text-center text-muted py-5">No sales found</td></tr>
             )}
             {paginated.map((sale, i) => (
-              <tr key={sale.id}>
+              <tr key={sale.id} style={{ opacity: archivedIds.has(sale.id) ? 0.5 : 1 }}>
                 <td className="text-muted">{(page - 1) * perPage + i + 1}</td>
                 <td>
                   <div className="fw-medium">{sale.player_name}</div>
@@ -180,7 +194,7 @@ export function SalesTable({ sales }: Props) {
                 </td>
                 <td className="text-end font-monospace">{(sale.total_sold ?? 0)}</td>
                 <td className="text-end font-monospace">{(sale.total_cash_received ?? 0).toLocaleString()}</td>
-                <td className="text-muted" style={{ fontSize: 12 }}>{fmt(sale.created_at)}</td>
+                <td className="text-muted d-none d-md-table-cell" style={{ fontSize: 12 }}>{fmt(sale.created_at)}</td>
                 <td>
                   <button
                     className="btn btn-sm btn-outline-secondary"
@@ -204,7 +218,7 @@ export function SalesTable({ sales }: Props) {
       <div className="modal fade" id="sale-modal" tabIndex={-1}>
         <div className="modal-dialog modal-lg modal-dialog-scrollable">
           <div className="modal-content">
-            {selected && <SaleModal sale={selected} />}
+            {selected && <SaleModal sale={selected} isArchived={archivedIds.has(selected.id)} onToggle={() => toggle(selected.id)} />}
           </div>
         </div>
       </div>

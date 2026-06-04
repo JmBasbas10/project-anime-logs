@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Pagination } from '@/components/ui/pagination'
+import { useArchive } from '@/lib/use-archive'
 
 export interface ProductPurchase {
   id: string
@@ -14,12 +15,22 @@ export interface ProductPurchase {
 
 function fmt(iso: string) { return new Date(iso).toLocaleString() }
 
-function PurchaseModal({ purchase }: { purchase: ProductPurchase }) {
+function PurchaseModal({ purchase, isArchived, onToggle }: {
+  purchase: ProductPurchase
+  isArchived: boolean
+  onToggle: () => Promise<void>
+}) {
+  const [loading, setLoading] = useState(false)
+  async function handle() { setLoading(true); await onToggle(); setLoading(false) }
+
   return (
     <>
       <div className="modal-header">
         <div>
-          <h5 className="modal-title fw-bold mb-0">Purchase Detail</h5>
+          <h5 className="modal-title fw-bold mb-0">
+            Purchase Detail
+            {isArchived && <span className="badge bg-warning-subtle text-warning-emphasis ms-2">Archived</span>}
+          </h5>
           <span className="text-muted small">{purchase.player_name} · #{purchase.player_id}</span>
         </div>
         <button type="button" className="btn-close" data-bs-dismiss="modal" />
@@ -39,7 +50,11 @@ function PurchaseModal({ purchase }: { purchase: ProductPurchase }) {
           </tbody>
         </table>
       </div>
-      <div className="modal-footer">
+      <div className="modal-footer justify-content-between">
+        <button className={`btn btn-sm ${isArchived ? 'btn-outline-success' : 'btn-outline-warning'}`}
+          onClick={handle} disabled={loading}>
+          {loading ? '…' : isArchived ? '↩ Unarchive' : '🗄 Archive'}
+        </button>
         <button className="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
       </div>
     </>
@@ -53,39 +68,40 @@ export function PurchasesTable({ purchases }: Props) {
   const [search, setSearch]     = useState('')
   const [page, setPage]         = useState(1)
   const [perPage, setPerPage]   = useState(10)
+  const { archivedIds, showArchived, setShowArchived, toggle, visible, count } = useArchive('product_purchases', purchases)
 
-  const filtered = search.trim()
-    ? purchases.filter(p =>
-        p.player_name.toLowerCase().includes(search.toLowerCase()) ||
-        p.product_name.toLowerCase().includes(search.toLowerCase()) ||
-        String(p.player_id).includes(search)
-      )
-    : purchases
+  const filtered = purchases
+    .filter(visible)
+    .filter(p => !search.trim() ||
+      p.player_name.toLowerCase().includes(search.toLowerCase()) ||
+      p.product_name.toLowerCase().includes(search.toLowerCase()) ||
+      String(p.player_id).includes(search))
 
   const paginated = filtered.slice((page - 1) * perPage, page * perPage)
-  const totalRobux = purchases.reduce((s, p) => s + p.robux_spent, 0)
+  const totalRobux = filtered.reduce((s, p) => s + p.robux_spent, 0)
 
   return (
     <>
       <div className="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2"
            style={{ borderBottom: '1px solid var(--bs-border-color)', paddingBottom: 12 }}>
-        <div className="d-flex align-items-center gap-3">
+        <div className="d-flex align-items-center gap-3 flex-wrap">
           <span className="fw-medium" style={{ fontSize: 14 }}>
-            All Purchases <span className="badge bg-secondary ms-1">{purchases.length}</span>
+            {showArchived ? 'Archived' : 'Active'} Purchases <span className="badge bg-secondary ms-1">{filtered.length}</span>
           </span>
           <span className="badge bg-success-subtle text-success-emphasis" style={{ fontSize: 12 }}>
             R$ {totalRobux.toLocaleString()} total
           </span>
         </div>
-        <div className="input-group input-group-sm" style={{ width: 260 }}>
-          <span className="input-group-text bg-transparent">🔍</span>
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Search player or product…"
-            value={search}
-            onChange={e => { setSearch(e.target.value); setPage(1) }}
-          />
+        <div className="d-flex gap-2 flex-wrap">
+          <div className="input-group input-group-sm" style={{ width: 220 }}>
+            <span className="input-group-text bg-transparent">🔍</span>
+            <input type="text" className="form-control" placeholder="Search player or product…"
+              value={search} onChange={e => { setSearch(e.target.value); setPage(1) }} />
+          </div>
+          <button className={`btn btn-sm ${showArchived ? 'btn-warning' : 'btn-outline-secondary'}`}
+            onClick={() => { setShowArchived(v => !v); setPage(1) }}>
+            🗄 {showArchived ? `Archived (${count})` : `Archive (${count})`}
+          </button>
         </div>
       </div>
 
@@ -97,7 +113,7 @@ export function PurchasesTable({ purchases }: Props) {
               <th>Player</th>
               <th>Product</th>
               <th className="text-end">Robux Spent</th>
-              <th>Time</th>
+              <th className="d-none d-md-table-cell">Time</th>
               <th style={{ width: 60 }}></th>
             </tr>
           </thead>
@@ -106,7 +122,7 @@ export function PurchasesTable({ purchases }: Props) {
               <tr><td colSpan={6} className="text-center text-muted py-5">No purchases found</td></tr>
             )}
             {paginated.map((p, i) => (
-              <tr key={p.id}>
+              <tr key={p.id} style={{ opacity: archivedIds.has(p.id) ? 0.5 : 1 }}>
                 <td className="text-muted">{(page - 1) * perPage + i + 1}</td>
                 <td>
                   <div className="fw-medium">{p.player_name}</div>
@@ -114,7 +130,7 @@ export function PurchasesTable({ purchases }: Props) {
                 </td>
                 <td><span className="badge bg-success-subtle text-success-emphasis">{p.product_name}</span></td>
                 <td className="text-end font-monospace">R$ {p.robux_spent.toLocaleString()}</td>
-                <td className="text-muted" style={{ fontSize: 12 }}>{fmt(p.created_at)}</td>
+                <td className="text-muted d-none d-md-table-cell" style={{ fontSize: 12 }}>{fmt(p.created_at)}</td>
                 <td>
                   <button
                     className="btn btn-sm btn-outline-secondary"
@@ -137,7 +153,7 @@ export function PurchasesTable({ purchases }: Props) {
       <div className="modal fade" id="purchase-modal" tabIndex={-1}>
         <div className="modal-dialog">
           <div className="modal-content">
-            {selected && <PurchaseModal purchase={selected} />}
+            {selected && <PurchaseModal purchase={selected} isArchived={archivedIds.has(selected.id)} onToggle={() => toggle(selected.id)} />}
           </div>
         </div>
       </div>

@@ -16,7 +16,7 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname()
-  const router = useRouter()
+  const router   = useRouter()
 
   async function handleSignOut() {
     await fetch('/api/auth/logout', { method: 'POST' })
@@ -26,7 +26,9 @@ export function Sidebar() {
 
   return (
     <div
-      className="d-flex flex-column flex-shrink-0"
+      className="offcanvas-md offcanvas-start d-flex flex-column flex-shrink-0"
+      id="sidebar-offcanvas"
+      tabIndex={-1}
       style={{
         width: 220,
         minHeight: '100vh',
@@ -34,8 +36,22 @@ export function Sidebar() {
         borderRight: '1px solid var(--bs-border-color)',
       }}
     >
-      {/* Brand */}
-      <div className="px-4 py-4" style={{ borderBottom: '1px solid var(--bs-border-color)' }}>
+      {/* Offcanvas header — close button visible on mobile only */}
+      <div
+        className="offcanvas-header d-md-none border-bottom px-4 py-3"
+        style={{ minHeight: 0 }}
+      >
+        <span className="fw-bold">🎮 Anime Logs</span>
+        <button
+          type="button"
+          className="btn-close"
+          data-bs-dismiss="offcanvas"
+          data-bs-target="#sidebar-offcanvas"
+        />
+      </div>
+
+      {/* Brand — visible on desktop only */}
+      <div className="d-none d-md-block px-4 py-3 border-bottom">
         <div className="d-flex align-items-center gap-2">
           <span style={{ fontSize: 22 }}>🎮</span>
           <div>
@@ -46,13 +62,15 @@ export function Sidebar() {
       </div>
 
       {/* Nav */}
-      <nav className="flex-grow-1 py-2 px-2">
+      <nav className="flex-grow-1 py-2 px-2 offcanvas-body">
         {navItems.map(({ href, label, icon }) => {
           const active = pathname.startsWith(href)
           return (
             <Link
               key={href}
               href={href}
+              data-bs-dismiss="offcanvas"
+              data-bs-target="#sidebar-offcanvas"
               className="d-flex align-items-center gap-3 px-3 py-2 rounded-2 mb-1 text-decoration-none"
               style={{
                 fontSize: 14,
@@ -70,7 +88,7 @@ export function Sidebar() {
       </nav>
 
       {/* Sign out */}
-      <div className="px-3 py-3" style={{ borderTop: '1px solid var(--bs-border-color)' }}>
+      <div className="px-3 py-3 border-top">
         <button
           className="btn btn-sm w-100 text-secondary"
           style={{ textAlign: 'left', fontSize: 13 }}

@@ -1,4 +1,11 @@
 import { type NextRequest } from 'next/server'
+import { verifySessionToken, SESSION_COOKIE } from '@/lib/session'
+
+export async function validateDashboardSession(req: NextRequest): Promise<boolean> {
+  const token = req.cookies.get(SESSION_COOKIE)?.value
+  if (!token) return false
+  return verifySessionToken(token)
+}
 
 export function validateRobloxApiKey(req: NextRequest): boolean {
   const key = req.headers.get('x-api-key')
