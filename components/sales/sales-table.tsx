@@ -46,7 +46,7 @@ export function SalesTable({ sales }: Props) {
     ? sales.filter(s =>
         s.player_name.toLowerCase().includes(search.toLowerCase()) ||
         String(s.player_id).includes(search) ||
-        s.characters.some(c => c.character_name.toLowerCase().includes(search.toLowerCase()))
+        (s.characters ?? []).some(c => c.character_name.toLowerCase().includes(search.toLowerCase()))
       )
     : sales
 
@@ -123,7 +123,7 @@ export function SalesTable({ sales }: Props) {
                     <tr>
                       <td colSpan={7} className="p-0">
                         <div className="px-4 py-3" style={{ background: 'rgba(255,255,255,0.03)', borderTop: '1px solid var(--bs-border-color-translucent)' }}>
-                          {sale.characters.length === 0 ? (
+                          {(sale.characters ?? []).length === 0 ? (
                             <span className="text-muted small">No character data</span>
                           ) : (
                             <table className="table table-sm mb-0" style={{ fontSize: 13 }}>
@@ -136,7 +136,7 @@ export function SalesTable({ sales }: Props) {
                                 </tr>
                               </thead>
                               <tbody>
-                                {sale.characters.map(c => (
+                                {(sale.characters ?? []).map(c => (
                                   <tr key={c.id}>
                                     <td className="fw-medium">{c.character_name}</td>
                                     <td className="font-monospace">{c.level}</td>

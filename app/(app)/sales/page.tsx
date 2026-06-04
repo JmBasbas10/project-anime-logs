@@ -12,10 +12,10 @@ export default async function SalesPage() {
     .limit(500)
 
   const sales = (data as CharacterSale[]) ?? []
-  const totalCash     = sales.reduce((s, r) => s + r.total_cash_received, 0)
-  const totalSold     = sales.reduce((s, r) => s + r.total_sold, 0)
-  const sellAllCount  = sales.filter(s => s.sale_type === 'SellAll').length
-  const sellOneCount  = sales.filter(s => s.sale_type === 'SellOne').length
+  const totalCash    = sales.reduce((s, r) => s + (r.total_cash_received ?? 0), 0)
+  const totalSold    = sales.reduce((s, r) => s + (r.total_sold ?? 0), 0)
+  const sellAllCount = sales.filter(s => s.sale_type === 'SellAll').length
+  const sellOneCount = sales.filter(s => s.sale_type === 'SellOne').length
 
   return (
     <div className="p-4">
