@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
 
   const supabase = createAdminSupabaseClient()
 
-  const { data: event, error: eventError } = await supabase
+  const { data: event, error } = await supabase
     .from('player_events')
     .insert({
       player_name: body.player_name,
@@ -31,37 +31,9 @@ export async function POST(request: NextRequest) {
     .select('id')
     .single()
 
-  if (eventError || !event) {
-    return Response.json({ error: eventError?.message ?? 'Insert failed' }, { status: 500 })
+  if (error || !event) {
+    return Response.json({ error: error?.message ?? 'Insert failed' }, { status: 500 })
   }
 
-  const eventId = event.id
-
-  const writes: PromiseLike<unknown>[] = []
-
-  if (body.inventory?.length) {
-    writes.push(
-      supabase
-        .from('player_inventory')
-        .insert(body.inventory.map((c) => ({ ...c, event_id: eventId })))
-    )
-  }
-  if (body.items?.length) {
-    writes.push(
-      supabase
-        .from('player_items')
-        .insert(body.items.map((i) => ({ ...i, event_id: eventId })))
-    )
-  }
-  if (body.equipped?.length) {
-    writes.push(
-      supabase
-        .from('player_equipped')
-        .insert(body.equipped.map((e) => ({ ...e, event_id: eventId })))
-    )
-  }
-
-  await Promise.all(writes)
-
-  return Response.json({ id: eventId }, { status: 201 })
+  return Response.json({ id: event.id }, { status: 201 })
 }

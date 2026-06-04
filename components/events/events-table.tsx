@@ -2,120 +2,124 @@
 
 import { useState } from 'react'
 import type { PlayerEvent } from '@/lib/types'
+import { Pagination } from '@/components/ui/pagination'
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleString()
+function fmt(iso: string) { return new Date(iso).toLocaleString() }
+function dur(s: number | null) {
+  if (!s) return '—'
+  return `${Math.floor(s / 60)}m ${s % 60}s`
 }
 
-function formatDuration(seconds: number | null) {
-  if (!seconds) return '—'
-  const m = Math.floor(seconds / 60)
-  const s = seconds % 60
-  return `${m}m ${s}s`
-}
-
-function EventModalBody({ event, onClose }: { event: PlayerEvent; onClose: () => void }) {
+function EventModal({ event }: { event: PlayerEvent }) {
   return (
     <>
       <div className="modal-header">
         <div>
           <h5 className="modal-title fw-bold mb-0">{event.player_name}</h5>
-          <div className="text-muted small">#{event.player_id}</div>
+          <span className="text-muted small">#{event.player_id}</span>
         </div>
-        <button type="button" className="btn-close" data-bs-dismiss="modal" onClick={onClose} />
+        <button type="button" className="btn-close" data-bs-dismiss="modal" />
       </div>
       <div className="modal-body">
-        <div className="row g-2 mb-3">
+        <div className="row g-2 mb-4">
           {[
-            { label: 'Event', value: event.event_type.toUpperCase() },
-            { label: 'Cash', value: event.cash.toLocaleString() },
-            { label: 'Highest Wave', value: event.highest_wave },
-            { label: 'Total Kills', value: event.total_kills.toLocaleString() },
-            { label: 'Duration', value: formatDuration(event.session_duration_seconds) },
-          ].map(({ label, value }) => (
-            <div key={label} className="col-6 col-md-4 col-lg">
-              <div className="card text-center py-2 px-1">
-                <div className="fw-bold font-monospace">{value}</div>
-                <div className="text-muted small">{label}</div>
+            { l: 'Type',     v: event.event_type.toUpperCase() },
+            { l: 'Cash',     v: event.cash.toLocaleString() },
+            { l: 'Wave',     v: event.highest_wave },
+            { l: 'Kills',    v: event.total_kills.toLocaleString() },
+            { l: 'Duration', v: dur(event.session_duration_seconds) },
+          ].map(({ l, v }) => (
+            <div key={l} className="col">
+              <div className="card text-center py-2">
+                <div className="fw-bold font-monospace">{v}</div>
+                <div className="text-muted" style={{ fontSize: 11 }}>{l}</div>
               </div>
             </div>
           ))}
         </div>
-
         <table className="table table-sm table-bordered small mb-0">
           <tbody>
-            <tr>
-              <td className="text-muted fw-medium" style={{ width: 140 }}>Joined at</td>
-              <td>{event.joined_at ? formatDate(event.joined_at) : '—'}</td>
-            </tr>
-            <tr>
-              <td className="text-muted fw-medium">Left at</td>
-              <td>{event.left_at ? formatDate(event.left_at) : '—'}</td>
-            </tr>
-            <tr>
-              <td className="text-muted fw-medium">Logged at</td>
-              <td>{formatDate(event.created_at)}</td>
-            </tr>
+            <tr><td className="text-muted" style={{ width: 130 }}>Joined at</td><td>{event.joined_at ? fmt(event.joined_at) : '—'}</td></tr>
+            <tr><td className="text-muted">Left at</td><td>{event.left_at ? fmt(event.left_at) : '—'}</td></tr>
+            <tr><td className="text-muted">Logged</td><td>{fmt(event.created_at)}</td></tr>
           </tbody>
         </table>
       </div>
       <div className="modal-footer">
-        <button type="button" className="btn btn-secondary btn-sm" data-bs-dismiss="modal">
-          Close
-        </button>
+        <button className="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
       </div>
     </>
   )
 }
 
-interface Props {
-  events: PlayerEvent[]
-}
+interface Props { events: PlayerEvent[] }
 
 export function EventsTable({ events }: Props) {
   const [selected, setSelected] = useState<PlayerEvent | null>(null)
+  const [tab, setTab]     = useState<'all' | 'join' | 'leave'>('all')
   const [search, setSearch] = useState('')
-  const [typeFilter, setTypeFilter] = useState<'all' | 'join' | 'leave'>('all')
+  const [page, setPage]   = useState(1)
+  const [perPage, setPerPage] = useState(25)
 
-  const filtered = events.filter((e) => {
-    const matchType = typeFilter === 'all' || e.event_type === typeFilter
-    const matchSearch =
-      !search.trim() ||
-      e.player_name.toLowerCase().includes(search.toLowerCase()) ||
-      String(e.player_id).includes(search)
-    return matchType && matchSearch
-  })
+  const afterTab = events.filter(e =>
+    tab === 'all' ? true : e.event_type === tab
+  )
+  const afterSearch = search.trim()
+    ? afterTab.filter(e =>
+        e.player_name.toLowerCase().includes(search.toLowerCase()) ||
+        String(e.player_id).includes(search)
+      )
+    : afterTab
+
+  const paginated = afterSearch.slice((page - 1) * perPage, page * perPage)
+  const joins  = events.filter(e => e.event_type === 'join').length
+  const leaves = events.filter(e => e.event_type === 'leave').length
+
+  const tabs = [
+    { key: 'all'   as const, label: 'All',   count: events.length },
+    { key: 'join'  as const, label: 'Joins',  count: joins },
+    { key: 'leave' as const, label: 'Leaves', count: leaves },
+  ]
 
   return (
     <>
-      {/* Filters */}
-      <div className="d-flex gap-2 mb-3 flex-wrap">
-        <input
-          type="text"
-          className="form-control form-control-sm"
-          placeholder="Filter by username or player ID…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={{ maxWidth: 280 }}
-        />
-        <div className="btn-group btn-group-sm">
-          {(['all', 'join', 'leave'] as const).map((t) => (
-            <button
-              key={t}
-              className={`btn ${typeFilter === t ? 'btn-primary' : 'btn-outline-secondary'}`}
-              onClick={() => setTypeFilter(t)}
-            >
-              {t === 'all' ? 'All' : t.charAt(0).toUpperCase() + t.slice(1)}
-            </button>
+      {/* Tab bar */}
+      <div className="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2"
+           style={{ borderBottom: '1px solid var(--bs-border-color)', paddingBottom: 0 }}>
+        <ul className="nav nav-tabs border-0">
+          {tabs.map(({ key, label, count }) => (
+            <li key={key} className="nav-item">
+              <button
+                className={`nav-link px-3 py-2 ${tab === key ? 'active' : ''}`}
+                onClick={() => { setTab(key); setPage(1) }}
+                style={{ fontSize: 14 }}
+              >
+                {label} <span className="badge bg-secondary ms-1" style={{ fontSize: 11 }}>{count}</span>
+              </button>
+            </li>
           ))}
+        </ul>
+        {/* Search */}
+        <div className="d-flex gap-2 mb-2">
+          <div className="input-group input-group-sm" style={{ width: 260 }}>
+            <span className="input-group-text bg-transparent">🔍</span>
+            <input
+              type="text"
+              className="form-control"
+              placeholder="Search player or ID…"
+              value={search}
+              onChange={e => { setSearch(e.target.value); setPage(1) }}
+            />
+          </div>
         </div>
       </div>
 
       {/* Table */}
       <div className="table-responsive rounded border">
-        <table className="table table-hover table-bordered mb-0" style={{ fontSize: 14 }}>
-          <thead className="table-dark">
+        <table className="table table-hover mb-0" style={{ fontSize: 14 }}>
+          <thead style={{ background: 'var(--bs-tertiary-bg)' }}>
             <tr>
+              <th style={{ width: 40 }} className="text-muted">#</th>
               <th>Player</th>
               <th>Type</th>
               <th className="text-end">Cash</th>
@@ -123,39 +127,38 @@ export function EventsTable({ events }: Props) {
               <th className="text-end">Kills</th>
               <th>Duration</th>
               <th>Time</th>
-              <th style={{ width: 80 }}></th>
+              <th style={{ width: 60 }}></th>
             </tr>
           </thead>
           <tbody>
-            {filtered.length === 0 && (
-              <tr>
-                <td colSpan={8} className="text-center text-muted py-4">No events found</td>
-              </tr>
+            {paginated.length === 0 && (
+              <tr><td colSpan={9} className="text-center text-muted py-5">No events found</td></tr>
             )}
-            {filtered.map((event) => (
+            {paginated.map((event, i) => (
               <tr key={event.id}>
+                <td className="text-muted">{(page - 1) * perPage + i + 1}</td>
                 <td>
                   <div className="fw-medium">{event.player_name}</div>
                   <div className="text-muted" style={{ fontSize: 12 }}>#{event.player_id}</div>
                 </td>
                 <td>
-                  <span className={`badge ${event.event_type === 'join' ? 'bg-success' : 'bg-secondary'}`}>
+                  <span className={`badge rounded-pill ${event.event_type === 'join' ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary'}`}>
                     {event.event_type}
                   </span>
                 </td>
                 <td className="text-end font-monospace">{event.cash.toLocaleString()}</td>
                 <td className="text-end font-monospace">{event.highest_wave}</td>
                 <td className="text-end font-monospace">{event.total_kills.toLocaleString()}</td>
-                <td className="text-muted small">{formatDuration(event.session_duration_seconds)}</td>
-                <td className="text-muted" style={{ fontSize: 12 }}>{formatDate(event.created_at)}</td>
-                <td className="text-center">
+                <td className="text-muted small">{dur(event.session_duration_seconds)}</td>
+                <td className="text-muted" style={{ fontSize: 12 }}>{fmt(event.created_at)}</td>
+                <td>
                   <button
-                    className="btn btn-sm btn-outline-primary"
+                    className="btn btn-sm btn-outline-secondary"
                     data-bs-toggle="modal"
                     data-bs-target="#event-modal"
                     onClick={() => setSelected(event)}
                   >
-                    View
+                    ···
                   </button>
                 </td>
               </tr>
@@ -164,11 +167,13 @@ export function EventsTable({ events }: Props) {
         </table>
       </div>
 
-      {/* Shared modal */}
+      <Pagination page={page} total={afterSearch.length} perPage={perPage}
+        onPageChange={setPage} onPerPageChange={setPerPage} />
+
       <div className="modal fade" id="event-modal" tabIndex={-1}>
         <div className="modal-dialog modal-dialog-scrollable">
           <div className="modal-content">
-            {selected && <EventModalBody event={selected} onClose={() => setSelected(null)} />}
+            {selected && <EventModal event={selected} />}
           </div>
         </div>
       </div>

@@ -4,8 +4,9 @@ import { useEffect } from 'react'
 
 export function BootstrapJs() {
   useEffect(() => {
-    // Load Bootstrap JS bundle (includes Popper) client-side only
-    import('bootstrap/dist/js/bootstrap.bundle.min.js')
+    // Dynamically load Bootstrap bundle (includes Popper) — client-side only
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    require('bootstrap/dist/js/bootstrap.bundle.min.js')
   }, [])
   return null
 }
