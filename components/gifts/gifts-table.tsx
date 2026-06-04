@@ -4,6 +4,7 @@ import { useState } from 'react'
 import type { GiftLog } from '@/lib/types'
 import { Pagination } from '@/components/ui/pagination'
 import { useArchive } from '@/lib/use-archive'
+import { CharacterAvatar } from '@/components/character-avatar'
 
 function fmt(iso: string) { return new Date(iso).toLocaleString() }
 
@@ -37,6 +38,14 @@ function GiftModal({ gift, isArchived, onToggle }: {
             <div className="text-muted" style={{ fontSize: 11 }}>To</div>
             <div className="fw-medium">{gift.receiver_name}</div>
             <div className="text-muted" style={{ fontSize: 11 }}>#{gift.receiver_id}</div>
+          </div>
+        </div>
+
+        <div className="d-flex align-items-center gap-2 mb-3">
+          <CharacterAvatar name={gift.character_name} size={48} />
+          <div>
+            <div className="fw-medium">{gift.character_name}</div>
+            <div className="text-muted font-monospace" style={{ fontSize: 11 }}>{gift.character_id}</div>
           </div>
         </div>
 
@@ -131,7 +140,12 @@ export function GiftsTable({ gifts }: Props) {
                   </div>
                   <div className="text-muted" style={{ fontSize: 11 }}>#{gift.giver_id} → #{gift.receiver_id}</div>
                 </td>
-                <td className="fw-medium">{gift.character_name}</td>
+                <td>
+                  <div className="d-flex align-items-center gap-2">
+                    <CharacterAvatar name={gift.character_name} size={28} />
+                    <span className="fw-medium">{gift.character_name}</span>
+                  </div>
+                </td>
                 <td className="d-none d-md-table-cell text-end font-monospace">{gift.level}</td>
                 <td className="d-none d-md-table-cell"><span className="badge bg-primary-subtle text-primary-emphasis">{gift.mutation}</span></td>
                 <td className="d-none d-lg-table-cell"><span className="badge bg-secondary-subtle text-secondary-emphasis">{gift.trait ?? '—'}</span></td>

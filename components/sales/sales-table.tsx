@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Pagination } from '@/components/ui/pagination'
 import { useArchive } from '@/lib/use-archive'
+import { CharacterAvatar } from '@/components/character-avatar'
 
 export interface SaleCharacter {
   id: string
@@ -94,7 +95,12 @@ function SaleModal({ sale, isArchived, onToggle }: {
             <tbody>
               {chars.map(c => (
                 <tr key={c.id}>
-                  <td className="fw-medium">{c.character_name}</td>
+                  <td>
+                    <div className="d-flex align-items-center gap-2">
+                      <CharacterAvatar name={c.character_name} size={28} />
+                      <span className="fw-medium">{c.character_name}</span>
+                    </div>
+                  </td>
                   <td className="text-muted font-monospace" style={{ fontSize: 11 }}>{c.character_id}</td>
                   <td className="font-monospace">{c.level}</td>
                   <td>

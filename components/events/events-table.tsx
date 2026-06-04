@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import type { PlayerEventWithSnapshot } from '@/lib/types'
 import { Pagination } from '@/components/ui/pagination'
+import { CharacterAvatar } from '@/components/character-avatar'
 
 function fmt(iso: string) { return new Date(iso).toLocaleString() }
 function dur(s: number | null) {
@@ -32,12 +33,15 @@ function SnapshotSection({ title, rows }: {
       ) : (
         <ul className="list-unstyled mb-0">
           {rows.map((r, i) => (
-            <li key={i} className="mb-2">
-              <div className="fw-medium small">{r.name}</div>
-              {r.character_id && (
-                <div className="text-muted font-monospace" style={{ fontSize: 10 }}>{r.character_id}</div>
-              )}
-              <div className="text-muted" style={{ fontSize: 11 }}>{r.detail}</div>
+            <li key={i} className="mb-2 d-flex gap-2">
+              {r.character_id && <CharacterAvatar name={r.name} size={32} />}
+              <div style={{ minWidth: 0 }}>
+                <div className="fw-medium small text-truncate">{r.name}</div>
+                {r.character_id && (
+                  <div className="text-muted font-monospace text-truncate" style={{ fontSize: 10 }}>{r.character_id}</div>
+                )}
+                <div className="text-muted" style={{ fontSize: 11 }}>{r.detail}</div>
+              </div>
             </li>
           ))}
         </ul>

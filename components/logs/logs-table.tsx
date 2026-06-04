@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import type { PlayerSnapshotWithData } from '@/lib/types'
 import { Pagination } from '@/components/ui/pagination'
+import { CharacterAvatar } from '@/components/character-avatar'
 
 function fmt(iso: string) { return new Date(iso).toLocaleString() }
 
@@ -62,10 +63,13 @@ function SnapshotModal({ snap, isArchived, onArchiveToggle }: {
               {rows.length === 0 ? <span className="text-muted small">None</span> : (
                 <ul className="list-unstyled mb-0">
                   {rows.map((r, i) => (
-                    <li key={i} className="mb-2">
-                      <div className="fw-medium small">{r.n}</div>
-                      {r.id && <div className="text-muted font-monospace" style={{ fontSize: 10 }}>{r.id}</div>}
-                      <div className="text-muted" style={{ fontSize: 11 }}>{r.d}</div>
+                    <li key={i} className="mb-2 d-flex gap-2">
+                      {r.id && <CharacterAvatar name={r.n} size={32} />}
+                      <div style={{ minWidth: 0 }}>
+                        <div className="fw-medium small text-truncate">{r.n}</div>
+                        {r.id && <div className="text-muted font-monospace text-truncate" style={{ fontSize: 10 }}>{r.id}</div>}
+                        <div className="text-muted" style={{ fontSize: 11 }}>{r.d}</div>
+                      </div>
                     </li>
                   ))}
                 </ul>
