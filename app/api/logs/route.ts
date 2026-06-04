@@ -8,26 +8,18 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const page = Math.max(1, Number(searchParams.get('page') ?? '1'))
   const limit = Math.min(100, Math.max(1, Number(searchParams.get('limit') ?? '50')))
-  const eventType = searchParams.get('event_type')
   const from = (page - 1) * limit
   const to = from + limit - 1
 
   const supabase = createAdminSupabaseClient()
-
-  let query = supabase
-    .from('player_events')
+  const { data, error, count } = await supabase
+    .from('player_snapshots')
     .select(
-      `*, inventory:player_inventory(*), items:player_items(*), equipped:player_equipped(*)`,
+      `*, inventory:snapshot_inventory(*), items:snapshot_items(*), equipped:snapshot_equipped(*)`,
       { count: 'exact' }
     )
-    .order('created_at', { ascending: false })
+    .order('batch_timestamp', { ascending: false })
     .range(from, to)
-
-  if (eventType === 'join' || eventType === 'leave') {
-    query = query.eq('event_type', eventType)
-  }
-
-  const { data, error, count } = await query
 
   if (error) return Response.json({ error: error.message }, { status: 500 })
 

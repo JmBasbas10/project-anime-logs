@@ -1,7 +1,7 @@
 import { type NextRequest } from 'next/server'
 import { createAdminSupabaseClient } from '@/lib/supabase'
 import { validateRobloxApiKey, validateReadApiKey, unauthorized } from '@/lib/auth'
-import type { GiftPayload } from '@/lib/types'
+import type { BulkGiftPayload } from '@/lib/types'
 
 export async function GET(request: NextRequest) {
   if (!validateReadApiKey(request)) return unauthorized()
@@ -13,7 +13,6 @@ export async function GET(request: NextRequest) {
   const to = from + limit - 1
 
   const supabase = createAdminSupabaseClient()
-
   const { data, error, count } = await supabase
     .from('gift_logs')
     .select('*', { count: 'exact' })
@@ -31,27 +30,28 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   if (!validateRobloxApiKey(request)) return unauthorized()
 
-  let body: GiftPayload
+  let body: BulkGiftPayload
   try {
     body = await request.json()
   } catch {
     return Response.json({ error: 'Invalid JSON' }, { status: 400 })
   }
 
-  const supabase = createAdminSupabaseClient()
+  if (!Array.isArray(body.gifts) || body.gifts.length === 0) {
+    return Response.json({ error: 'gifts array is required' }, { status: 400 })
+  }
 
-  const { data, error } = await supabase
-    .from('gift_logs')
-    .insert({
-      player_name: body.player_name,
-      player_id: body.player_id,
-      gift_item: body.gift_item,
-      gift_value: body.gift_value,
-    })
-    .select('id')
-    .single()
+  const supabase = createAdminSupabaseClient()
+  const { error } = await supabase.from('gift_logs').insert(
+    body.gifts.map((g) => ({
+      player_name: g.player_name,
+      player_id: g.player_id,
+      gift_item: g.gift_item,
+      gift_value: g.gift_value,
+      ...(g.timestamp ? { created_at: g.timestamp } : {}),
+    }))
+  )
 
   if (error) return Response.json({ error: error.message }, { status: 500 })
-
-  return Response.json({ id: data.id }, { status: 201 })
+  return Response.json({ ok: true, count: body.gifts.length }, { status: 201 })
 }

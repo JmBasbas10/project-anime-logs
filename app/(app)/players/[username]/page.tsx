@@ -2,8 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createAdminSupabaseClient } from '@/lib/supabase'
 import { PlayerTimeline } from '@/components/players/player-timeline'
-import type { PlayerEventWithSnapshot } from '@/lib/types'
-import { ArrowLeft } from 'lucide-react'
+import type { PlayerSnapshotWithData } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,9 +18,9 @@ export default async function PlayerPage({ params }: Props) {
   const supabase = createAdminSupabaseClient()
 
   const query = supabase
-    .from('player_events')
-    .select(`*, inventory:player_inventory(*), items:player_items(*), equipped:player_equipped(*)`)
-    .order('created_at', { ascending: false })
+    .from('player_snapshots')
+    .select(`*, inventory:snapshot_inventory(*), items:snapshot_items(*), equipped:snapshot_equipped(*)`)
+    .order('batch_timestamp', { ascending: false })
 
   const { data, error } = await (isId
     ? query.eq('player_id', Number(decoded))
@@ -29,56 +28,46 @@ export default async function PlayerPage({ params }: Props) {
 
   if (error) notFound()
 
-  const sessions = (data as PlayerEventWithSnapshot[]) ?? []
-  const displayName = isId
-    ? (sessions[0]?.player_name ?? `Player #${decoded}`)
-    : decoded
-
-  const latestLeave = sessions.find((s) => s.event_type === 'leave')
-  const stats = latestLeave
-    ? { cash: latestLeave.cash, wave: latestLeave.highest_wave, kills: latestLeave.total_kills }
-    : null
+  const snapshots = (data as PlayerSnapshotWithData[]) ?? []
+  const displayName = isId ? (snapshots[0]?.player_name ?? `Player #${decoded}`) : decoded
+  const latest = snapshots[0]
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
-      <div className="mb-6">
-        <Link
-          href="/players"
-          className="-ml-2 mb-3 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back
+    <div className="container-fluid p-4">
+      <div className="mb-4">
+        <Link href="/players" className="text-muted small text-decoration-none d-inline-flex align-items-center gap-1 mb-2">
+          ← Back to search
         </Link>
 
-        <h1 className="text-2xl font-bold">{displayName}</h1>
-        {sessions[0] && (
-          <p className="text-muted-foreground text-xs mt-0.5">
-            Player ID: #{sessions[0].player_id}
-          </p>
-        )}
-        <p className="text-muted-foreground text-sm mt-1">
-          {sessions.length} event{sessions.length !== 1 ? 's' : ''} recorded
-        </p>
-
-        {stats && (
-          <div className="flex gap-4 mt-4 text-sm flex-wrap">
-            <StatBadge label="Cash" value={stats.cash.toLocaleString()} />
-            <StatBadge label="Highest Wave" value={stats.wave.toString()} />
-            <StatBadge label="Total Kills" value={stats.kills.toLocaleString()} />
+        <div className="d-flex align-items-start justify-content-between flex-wrap gap-3">
+          <div>
+            <h2 className="fw-bold mb-0">{displayName}</h2>
+            {snapshots[0] && (
+              <div className="text-muted small">Player ID: #{snapshots[0].player_id}</div>
+            )}
+            <div className="text-muted small">{snapshots.length} snapshot{snapshots.length !== 1 ? 's' : ''} recorded</div>
           </div>
-        )}
+
+          {latest && (
+            <div className="d-flex gap-2 flex-wrap">
+              <div className="card text-center px-3 py-2">
+                <div className="fw-bold font-monospace">{latest.cash.toLocaleString()}</div>
+                <div className="text-muted small">Cash</div>
+              </div>
+              <div className="card text-center px-3 py-2">
+                <div className="fw-bold font-monospace">{latest.highest_wave}</div>
+                <div className="text-muted small">Highest Wave</div>
+              </div>
+              <div className="card text-center px-3 py-2">
+                <div className="fw-bold font-monospace">{latest.total_kills.toLocaleString()}</div>
+                <div className="text-muted small">Total Kills</div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
-      <PlayerTimeline username={displayName} sessions={sessions} />
-    </div>
-  )
-}
-
-function StatBadge({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-md border px-3 py-2">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="font-semibold tabular-nums">{value}</p>
+      <PlayerTimeline username={displayName} snapshots={snapshots} />
     </div>
   )
 }

@@ -2,9 +2,6 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { Search } from 'lucide-react'
 
 export default function PlayersPage() {
   const [query, setQuery] = useState('')
@@ -14,32 +11,37 @@ export default function PlayersPage() {
     e.preventDefault()
     const trimmed = query.trim()
     if (!trimmed) return
-    // numeric input = search by player_id
     const isId = /^\d+$/.test(trimmed)
     router.push(isId ? `/players/id/${trimmed}` : `/players/${encodeURIComponent(trimmed)}`)
   }
 
   return (
-    <div className="p-6 max-w-xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold">Player Lookup</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Search by Roblox username or Player ID
-        </p>
+    <div className="container-fluid p-4">
+      <div className="mb-4">
+        <h2 className="fw-bold mb-1">Player Lookup</h2>
+        <p className="text-muted small">Search by Roblox username or numeric Player ID</p>
       </div>
-      <form onSubmit={handleSearch} className="flex gap-2">
-        <Input
-          placeholder="Username or Player ID…"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          className="flex-1"
-          autoFocus
-        />
-        <Button type="submit" disabled={!query.trim()}>
-          <Search className="h-4 w-4 mr-2" />
-          Search
-        </Button>
-      </form>
+
+      <div className="card" style={{ maxWidth: 480 }}>
+        <div className="card-body">
+          <form onSubmit={handleSearch} className="d-flex gap-2">
+            <input
+              type="text"
+              className="form-control"
+              placeholder="Username or Player ID…"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              autoFocus
+            />
+            <button type="submit" className="btn btn-primary" disabled={!query.trim()}>
+              Search
+            </button>
+          </form>
+          <p className="text-muted small mt-2 mb-0">
+            Tip: entering a number searches by Player ID
+          </p>
+        </div>
+      </div>
     </div>
   )
 }

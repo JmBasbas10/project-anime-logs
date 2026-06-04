@@ -1,79 +1,77 @@
 'use client'
 
 import { Fragment, useState } from 'react'
-import type { PlayerEventWithSnapshot, EventType } from '@/lib/types'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
-import { ChevronDown, ChevronRight } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import type { PlayerSnapshotWithData } from '@/lib/types'
 
-type Filter = 'all' | 'events' | 'updates'
-
-function eventBadge(type: EventType) {
-  if (type === 'join') return <Badge variant="default">join</Badge>
-  if (type === 'leave') return <Badge variant="secondary">leave</Badge>
-  return <Badge variant="outline">update</Badge>
-}
-
-function formatDuration(seconds: number | null) {
-  if (!seconds) return '—'
-  const m = Math.floor(seconds / 60)
-  const s = seconds % 60
-  return `${m}m ${s}s`
-}
+type Filter = 'all' | string   // 'all' or a player name search string
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleString()
 }
 
-function SnapshotSection({
-  title,
-  rows,
-}: {
-  title: string
-  rows: { name: string; detail: string }[]
-}) {
+function SnapshotDetail({ snapshot }: { snapshot: PlayerSnapshotWithData }) {
   return (
-    <div>
-      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-        {title}
-      </p>
-      {rows.length === 0 ? (
-        <p className="text-sm text-muted-foreground">None</p>
-      ) : (
-        <ul className="space-y-1">
-          {rows.map((row, i) => (
-            <li key={i} className="text-sm">
-              <span className="font-medium">{row.name}</span>
-              <span className="text-muted-foreground ml-2 text-xs">{row.detail}</span>
-            </li>
-          ))}
-        </ul>
-      )}
+    <div className="row g-3 p-2">
+      <div className="col-12 col-md-4">
+        <p className="text-uppercase text-muted small fw-semibold mb-2">Inventory</p>
+        {snapshot.inventory.length === 0 ? (
+          <span className="text-muted small">None</span>
+        ) : (
+          <ul className="list-unstyled mb-0">
+            {snapshot.inventory.map((c, i) => (
+              <li key={i} className="small mb-1">
+                <span className="fw-medium">{c.character_name}</span>
+                <span className="text-muted ms-2">
+                  Lv{c.level} · {c.mutation} · {c.trait}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+      <div className="col-12 col-md-4">
+        <p className="text-uppercase text-muted small fw-semibold mb-2">Items</p>
+        {snapshot.items.length === 0 ? (
+          <span className="text-muted small">None</span>
+        ) : (
+          <ul className="list-unstyled mb-0">
+            {snapshot.items.map((item, i) => (
+              <li key={i} className="small mb-1">
+                <span className="fw-medium">{item.item_name}</span>
+                <span className="text-muted ms-2">×{item.quantity}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+      <div className="col-12 col-md-4">
+        <p className="text-uppercase text-muted small fw-semibold mb-2">Equipped</p>
+        {snapshot.equipped.length === 0 ? (
+          <span className="text-muted small">None</span>
+        ) : (
+          <ul className="list-unstyled mb-0">
+            {snapshot.equipped.map((c, i) => (
+              <li key={i} className="small mb-1">
+                <span className="fw-medium">{c.character_name}</span>
+                <span className="text-muted ms-2">
+                  Lv{c.level} · {c.mutation} · {c.trait}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   )
 }
 
 interface Props {
-  events: PlayerEventWithSnapshot[]
+  snapshots: PlayerSnapshotWithData[]
 }
 
-const FILTER_LABELS: { key: Filter; label: string }[] = [
-  { key: 'all', label: 'All' },
-  { key: 'events', label: 'Join / Leave' },
-  { key: 'updates', label: 'Updates' },
-]
-
-export function LogsTable({ events }: Props) {
+export function LogsTable({ snapshots }: Props) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
-  const [filter, setFilter] = useState<Filter>('all')
+  const [search, setSearch] = useState('')
 
   function toggle(id: string) {
     setExpanded((prev) => {
@@ -83,123 +81,81 @@ export function LogsTable({ events }: Props) {
     })
   }
 
-  const filtered = events.filter((e) => {
-    if (filter === 'events') return e.event_type === 'join' || e.event_type === 'leave'
-    if (filter === 'updates') return e.event_type === 'update'
-    return true
-  })
+  const filtered = search.trim()
+    ? snapshots.filter(
+        (s) =>
+          s.player_name.toLowerCase().includes(search.toLowerCase()) ||
+          String(s.player_id).includes(search)
+      )
+    : snapshots
 
   return (
-    <div className="space-y-3">
-      {/* Filter tabs */}
-      <div className="flex gap-1 border rounded-md p-1 w-fit">
-        {FILTER_LABELS.map(({ key, label }) => (
-          <button
-            key={key}
-            onClick={() => setFilter(key)}
-            className={cn(
-              'px-3 py-1 text-sm rounded transition-colors',
-              filter === key
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:text-foreground'
-            )}
-          >
-            {label}
-          </button>
-        ))}
+    <div>
+      {/* Search bar */}
+      <div className="mb-3">
+        <input
+          type="text"
+          className="form-control form-control-sm"
+          placeholder="Filter by username or player ID…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{ maxWidth: 320 }}
+        />
       </div>
 
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-8" />
-              <TableHead>Player</TableHead>
-              <TableHead>Event</TableHead>
-              <TableHead className="text-right">Cash</TableHead>
-              <TableHead className="text-right">Wave</TableHead>
-              <TableHead className="text-right">Kills</TableHead>
-              <TableHead>Duration</TableHead>
-              <TableHead>Time</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+      <div className="table-responsive">
+        <table className="table table-dark table-hover table-bordered align-middle mb-0">
+          <thead className="table-secondary">
+            <tr>
+              <th style={{ width: 32 }} />
+              <th>Player</th>
+              <th className="text-end">Cash</th>
+              <th className="text-end">Wave</th>
+              <th className="text-end">Kills</th>
+              <th>Batch Time</th>
+            </tr>
+          </thead>
+          <tbody>
             {filtered.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={8} className="text-center text-muted-foreground py-10">
-                  No events found
-                </TableCell>
-              </TableRow>
+              <tr>
+                <td colSpan={6} className="text-center text-muted py-4">
+                  No snapshots found
+                </td>
+              </tr>
             )}
-            {filtered.map((event) => {
-              const isOpen = expanded.has(event.id)
+            {filtered.map((snap) => {
+              const isOpen = expanded.has(snap.id)
               return (
-                <Fragment key={event.id}>
-                  <TableRow
-                    className="cursor-pointer select-none hover:bg-muted/50"
-                    onClick={() => toggle(event.id)}
+                <Fragment key={snap.id}>
+                  <tr
+                    role="button"
+                    onClick={() => toggle(snap.id)}
+                    style={{ cursor: 'pointer', userSelect: 'none' }}
                   >
-                    <TableCell className="text-muted-foreground">
-                      {isOpen ? (
-                        <ChevronDown className="h-4 w-4" />
-                      ) : (
-                        <ChevronRight className="h-4 w-4" />
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="font-medium">{event.player_name}</div>
-                      <div className="text-xs text-muted-foreground tabular-nums">
-                        #{event.player_id}
-                      </div>
-                    </TableCell>
-                    <TableCell>{eventBadge(event.event_type)}</TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {event.cash.toLocaleString()}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">{event.highest_wave}</TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {event.total_kills.toLocaleString()}
-                    </TableCell>
-                    <TableCell>{formatDuration(event.session_duration_seconds)}</TableCell>
-                    <TableCell className="text-muted-foreground text-sm">
-                      {formatDate(event.created_at)}
-                    </TableCell>
-                  </TableRow>
-
+                    <td className="text-center text-muted small">{isOpen ? '▼' : '▶'}</td>
+                    <td>
+                      <div className="fw-medium">{snap.player_name}</div>
+                      <div className="text-muted small">#{snap.player_id}</div>
+                    </td>
+                    <td className="text-end font-monospace">{snap.cash.toLocaleString()}</td>
+                    <td className="text-end font-monospace">{snap.highest_wave}</td>
+                    <td className="text-end font-monospace">{snap.total_kills.toLocaleString()}</td>
+                    <td className="text-muted small">{formatDate(snap.batch_timestamp)}</td>
+                  </tr>
                   {isOpen && (
-                    <TableRow>
-                      <TableCell colSpan={8} className="bg-muted/20 p-4">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                          <SnapshotSection
-                            title="Inventory"
-                            rows={event.inventory.map((c) => ({
-                              name: c.character_name,
-                              detail: `Lv${c.level} · ${c.mutation} · ${c.trait}`,
-                            }))}
-                          />
-                          <SnapshotSection
-                            title="Items"
-                            rows={event.items.map((i) => ({
-                              name: i.item_name,
-                              detail: `×${i.quantity}`,
-                            }))}
-                          />
-                          <SnapshotSection
-                            title="Equipped"
-                            rows={event.equipped.map((c) => ({
-                              name: c.character_name,
-                              detail: `Lv${c.level} · ${c.mutation} · ${c.trait}`,
-                            }))}
-                          />
+                    <tr>
+                      <td colSpan={6} className="p-0">
+                        <div className="p-3" style={{ backgroundColor: 'rgba(255,255,255,0.03)' }}>
+                          <SnapshotDetail snapshot={snap} />
                         </div>
-                      </TableCell>
-                    </TableRow>
+                      </td>
+                    </tr>
                   )}
                 </Fragment>
               )
             })}
-          </TableBody>
-        </Table>
+          </tbody>
+        </table>
       </div>
     </div>
   )

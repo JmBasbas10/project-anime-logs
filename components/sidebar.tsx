@@ -2,15 +2,12 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { LayoutList, Gift, Server, Users, LogOut } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
 
 const navItems = [
-  { href: '/logs', label: 'Logs', icon: LayoutList },
-  { href: '/gifts', label: 'Gifts', icon: Gift },
-  { href: '/servers', label: 'Servers', icon: Server },
-  { href: '/players', label: 'Players', icon: Users },
+  { href: '/logs', label: 'Snapshots', icon: '📋' },
+  { href: '/gifts', label: 'Gifts', icon: '🎁' },
+  { href: '/servers', label: 'Servers', icon: '🖥️' },
+  { href: '/players', label: 'Players', icon: '👤' },
 ]
 
 export function Sidebar() {
@@ -24,41 +21,39 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="w-56 border-r bg-sidebar h-screen sticky top-0 flex flex-col shrink-0">
-      <div className="p-4 border-b">
-        <h1 className="font-bold text-lg tracking-tight">Anime Logs</h1>
-        <p className="text-xs text-muted-foreground mt-0.5">Roblox Dashboard</p>
+    <div
+      className="d-flex flex-column flex-shrink-0 p-3 border-end"
+      style={{ width: '220px', minHeight: '100vh', backgroundColor: 'var(--bs-body-bg)' }}
+    >
+      <div className="mb-3 pb-3 border-bottom">
+        <span className="fw-bold fs-5">🎮 Anime Logs</span>
+        <div className="text-muted small">Roblox Dashboard</div>
       </div>
 
-      <nav className="flex-1 p-2 space-y-0.5">
-        {navItems.map(({ href, label, icon: Icon }) => (
-          <Link
-            key={href}
-            href={href}
-            className={cn(
-              'flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium transition-colors',
-              pathname.startsWith(href)
-                ? 'bg-sidebar-primary text-sidebar-primary-foreground'
-                : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
-            )}
-          >
-            <Icon className="h-4 w-4 shrink-0" />
-            {label}
-          </Link>
+      <ul className="nav nav-pills flex-column mb-auto gap-1">
+        {navItems.map(({ href, label, icon }) => (
+          <li key={href} className="nav-item">
+            <Link
+              href={href}
+              className={`nav-link d-flex align-items-center gap-2 ${
+                pathname.startsWith(href) ? 'active' : 'text-secondary'
+              }`}
+            >
+              <span>{icon}</span>
+              {label}
+            </Link>
+          </li>
         ))}
-      </nav>
+      </ul>
 
-      <div className="p-2 border-t">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="w-full justify-start gap-2.5 text-muted-foreground hover:text-foreground"
+      <div className="mt-auto pt-3 border-top">
+        <button
+          className="btn btn-outline-secondary btn-sm w-100"
           onClick={handleSignOut}
         >
-          <LogOut className="h-4 w-4 shrink-0" />
           Sign out
-        </Button>
+        </button>
       </div>
-    </aside>
+    </div>
   )
 }

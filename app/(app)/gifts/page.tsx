@@ -11,20 +11,33 @@ export default async function GiftsPage() {
     .from('gift_logs')
     .select('*')
     .order('created_at', { ascending: false })
-    .limit(100)
+    .limit(200)
+
+  const gifts = (data as GiftLog[]) ?? []
+  const totalValue = gifts.reduce((sum, g) => sum + g.gift_value, 0)
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Gift Logs</h1>
-        <p className="text-muted-foreground text-sm mt-1">All gift transactions</p>
-      </div>
-      {error && (
-        <div className="rounded-md border border-destructive/50 bg-destructive/10 p-4 text-sm text-destructive mb-4">
-          {error.message}
+    <div className="container-fluid p-4">
+      <div className="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
+        <div>
+          <h2 className="fw-bold mb-1">Gift Logs</h2>
+          <p className="text-muted small mb-0">All gift transactions</p>
         </div>
-      )}
-      <GiftsTable gifts={(data as GiftLog[]) ?? []} />
+        <div className="d-flex gap-2 flex-wrap">
+          <div className="card text-center px-3 py-2">
+            <div className="fw-bold fs-5">{gifts.length}</div>
+            <div className="text-muted small">Gifts</div>
+          </div>
+          <div className="card text-center px-3 py-2">
+            <div className="fw-bold fs-5">{totalValue.toLocaleString()}</div>
+            <div className="text-muted small">Total value</div>
+          </div>
+        </div>
+      </div>
+
+      {error && <div className="alert alert-danger">{error.message}</div>}
+
+      <GiftsTable gifts={gifts} />
     </div>
   )
 }
