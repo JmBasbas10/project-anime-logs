@@ -4,11 +4,13 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 
 const navItems = [
-  { href: '/events',  label: 'Events',    icon: '⚡' },
-  { href: '/logs',    label: 'Snapshots', icon: '📋' },
-  { href: '/gifts',   label: 'Gifts',     icon: '🎁' },
-  { href: '/servers', label: 'Servers',   icon: '🖥️' },
-  { href: '/players', label: 'Players',   icon: '👤' },
+  { href: '/events',    label: 'Events',    icon: '⚡' },
+  { href: '/logs',      label: 'Snapshots', icon: '📋' },
+  { href: '/gifts',     label: 'Gifts',     icon: '🎁' },
+  { href: '/sales',     label: 'Sales',     icon: '💰' },
+  { href: '/purchases', label: 'Purchases', icon: '🛒' },
+  { href: '/servers',   label: 'Servers',   icon: '🖥️' },
+  { href: '/players',   label: 'Players',   icon: '👤' },
 ]
 
 export function Sidebar() {
