@@ -14,18 +14,25 @@ interface Props {
 export default async function PlayerPage({ params }: Props) {
   const { username } = await params
   const decoded = decodeURIComponent(username)
+  const isId = /^\d+$/.test(decoded)
 
   const supabase = createAdminSupabaseClient()
 
-  const { data, error } = await supabase
+  const query = supabase
     .from('player_events')
     .select(`*, inventory:player_inventory(*), items:player_items(*), equipped:player_equipped(*)`)
-    .eq('player_name', decoded)
     .order('created_at', { ascending: false })
+
+  const { data, error } = await (isId
+    ? query.eq('player_id', Number(decoded))
+    : query.eq('player_name', decoded))
 
   if (error) notFound()
 
   const sessions = (data as PlayerEventWithSnapshot[]) ?? []
+  const displayName = isId
+    ? (sessions[0]?.player_name ?? `Player #${decoded}`)
+    : decoded
 
   const latestLeave = sessions.find((s) => s.event_type === 'leave')
   const stats = latestLeave
@@ -43,13 +50,18 @@ export default async function PlayerPage({ params }: Props) {
           Back
         </Link>
 
-        <h1 className="text-2xl font-bold">{decoded}</h1>
+        <h1 className="text-2xl font-bold">{displayName}</h1>
+        {sessions[0] && (
+          <p className="text-muted-foreground text-xs mt-0.5">
+            Player ID: #{sessions[0].player_id}
+          </p>
+        )}
         <p className="text-muted-foreground text-sm mt-1">
-          {sessions.length} session{sessions.length !== 1 ? 's' : ''} recorded
+          {sessions.length} event{sessions.length !== 1 ? 's' : ''} recorded
         </p>
 
         {stats && (
-          <div className="flex gap-6 mt-4 text-sm">
+          <div className="flex gap-4 mt-4 text-sm flex-wrap">
             <StatBadge label="Cash" value={stats.cash.toLocaleString()} />
             <StatBadge label="Highest Wave" value={stats.wave.toString()} />
             <StatBadge label="Total Kills" value={stats.kills.toLocaleString()} />
@@ -57,7 +69,7 @@ export default async function PlayerPage({ params }: Props) {
         )}
       </div>
 
-      <PlayerTimeline username={decoded} sessions={sessions} />
+      <PlayerTimeline username={displayName} sessions={sessions} />
     </div>
   )
 }

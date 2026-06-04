@@ -1,4 +1,4 @@
-export type EventType = 'join' | 'leave'
+export type EventType = 'join' | 'leave' | 'update'
 
 export interface PlayerEvent {
   id: string
@@ -65,7 +65,7 @@ export interface PlayerEventWithSnapshot extends PlayerEvent {
 }
 
 export interface EventPayload {
-  event_type: EventType
+  event_type: 'join' | 'leave' | 'update'
   player_name: string
   player_id: number
   cash: number

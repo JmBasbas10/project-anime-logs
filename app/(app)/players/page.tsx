@@ -7,13 +7,16 @@ import { Button } from '@/components/ui/button'
 import { Search } from 'lucide-react'
 
 export default function PlayersPage() {
-  const [username, setUsername] = useState('')
+  const [query, setQuery] = useState('')
   const router = useRouter()
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault()
-    const trimmed = username.trim()
-    if (trimmed) router.push(`/players/${encodeURIComponent(trimmed)}`)
+    const trimmed = query.trim()
+    if (!trimmed) return
+    // numeric input = search by player_id
+    const isId = /^\d+$/.test(trimmed)
+    router.push(isId ? `/players/id/${trimmed}` : `/players/${encodeURIComponent(trimmed)}`)
   }
 
   return (
@@ -21,18 +24,18 @@ export default function PlayersPage() {
       <div className="mb-8">
         <h1 className="text-2xl font-bold">Player Lookup</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Search for a player to view their full session history
+          Search by Roblox username or Player ID
         </p>
       </div>
       <form onSubmit={handleSearch} className="flex gap-2">
         <Input
-          placeholder="Enter Roblox username…"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          placeholder="Username or Player ID…"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
           className="flex-1"
           autoFocus
         />
-        <Button type="submit" disabled={!username.trim()}>
+        <Button type="submit" disabled={!query.trim()}>
           <Search className="h-4 w-4 mr-2" />
           Search
         </Button>
