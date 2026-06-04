@@ -1,6 +1,6 @@
 'use client'
 
-import { Fragment, useState } from 'react'
+import { useState } from 'react'
 import { Pagination } from '@/components/ui/pagination'
 
 export interface SaleCharacter {
@@ -26,21 +26,88 @@ export interface CharacterSale {
 
 function fmt(iso: string) { return new Date(iso).toLocaleString() }
 
+function SaleModal({ sale }: { sale: CharacterSale }) {
+  const chars = sale.characters ?? []
+  return (
+    <>
+      <div className="modal-header">
+        <div>
+          <h5 className="modal-title fw-bold mb-0">{sale.player_name}</h5>
+          <span className="text-muted small">
+            #{sale.player_id} ·{' '}
+            <span className={`badge rounded-pill ms-1 ${
+              sale.sale_type === 'SellAll'
+                ? 'bg-warning-subtle text-warning-emphasis'
+                : 'bg-info-subtle text-info-emphasis'
+            }`}>
+              {sale.sale_type}
+            </span>
+          </span>
+        </div>
+        <button type="button" className="btn-close" data-bs-dismiss="modal" />
+      </div>
+      <div className="modal-body">
+        {/* Summary stats */}
+        <div className="row g-2 mb-4">
+          {[
+            { l: 'Characters Sold', v: sale.total_sold ?? 0 },
+            { l: 'Total Cash',      v: (sale.total_cash_received ?? 0).toLocaleString() },
+            { l: 'Time',            v: fmt(sale.created_at) },
+          ].map(({ l, v }) => (
+            <div key={l} className="col">
+              <div className="card text-center py-2 px-1">
+                <div className="fw-bold font-monospace">{v}</div>
+                <div className="text-muted" style={{ fontSize: 11 }}>{l}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Characters breakdown */}
+        <p className="fw-semibold text-uppercase text-muted mb-2" style={{ fontSize: 11, letterSpacing: 1 }}>
+          Characters ({chars.length})
+        </p>
+        {chars.length === 0 ? (
+          <div className="text-muted small">No character data</div>
+        ) : (
+          <table className="table table-sm table-bordered mb-0" style={{ fontSize: 13 }}>
+            <thead style={{ background: 'var(--bs-tertiary-bg)' }}>
+              <tr>
+                <th>Character</th>
+                <th>Level</th>
+                <th>Mutation</th>
+                <th className="text-end">Cash</th>
+              </tr>
+            </thead>
+            <tbody>
+              {chars.map(c => (
+                <tr key={c.id}>
+                  <td className="fw-medium">{c.character_name}</td>
+                  <td className="font-monospace">{c.level}</td>
+                  <td>
+                    <span className="badge bg-primary-subtle text-primary-emphasis">{c.mutation}</span>
+                  </td>
+                  <td className="text-end font-monospace">{c.cash_received.toLocaleString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+      <div className="modal-footer">
+        <button className="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+      </div>
+    </>
+  )
+}
+
 interface Props { sales: CharacterSale[] }
 
 export function SalesTable({ sales }: Props) {
-  const [expanded, setExpanded] = useState<Set<string>>(new Set())
+  const [selected, setSelected] = useState<CharacterSale | null>(null)
   const [search, setSearch]     = useState('')
   const [page, setPage]         = useState(1)
   const [perPage, setPerPage]   = useState(10)
-
-  function toggle(id: string) {
-    setExpanded(prev => {
-      const next = new Set(prev)
-      next.has(id) ? next.delete(id) : next.add(id)
-      return next
-    })
-  }
 
   const filtered = search.trim()
     ? sales.filter(s =>
@@ -75,95 +142,65 @@ export function SalesTable({ sales }: Props) {
         <table className="table table-hover mb-0" style={{ fontSize: 14 }}>
           <thead style={{ background: 'var(--bs-tertiary-bg)' }}>
             <tr>
-              <th style={{ width: 32 }} />
               <th style={{ width: 40 }} className="text-muted">#</th>
               <th>Player</th>
               <th>Type</th>
               <th className="text-end">Sold</th>
               <th className="text-end">Cash Received</th>
               <th>Time</th>
+              <th style={{ width: 60 }}></th>
             </tr>
           </thead>
           <tbody>
             {paginated.length === 0 && (
               <tr><td colSpan={7} className="text-center text-muted py-5">No sales found</td></tr>
             )}
-            {paginated.map((sale, i) => {
-              const isOpen = expanded.has(sale.id)
-              return (
-                <Fragment key={sale.id}>
-                  <tr
-                    role="button"
-                    onClick={() => toggle(sale.id)}
-                    style={{ cursor: 'pointer', userSelect: 'none' }}
+            {paginated.map((sale, i) => (
+              <tr key={sale.id}>
+                <td className="text-muted">{(page - 1) * perPage + i + 1}</td>
+                <td>
+                  <div className="fw-medium">{sale.player_name}</div>
+                  <div className="text-muted" style={{ fontSize: 12 }}>#{sale.player_id}</div>
+                </td>
+                <td>
+                  <span className={`badge rounded-pill ${
+                    sale.sale_type === 'SellAll'
+                      ? 'bg-warning-subtle text-warning-emphasis'
+                      : 'bg-info-subtle text-info-emphasis'
+                  }`}>
+                    {sale.sale_type}
+                  </span>
+                </td>
+                <td className="text-end font-monospace">{(sale.total_sold ?? 0)}</td>
+                <td className="text-end font-monospace">{(sale.total_cash_received ?? 0).toLocaleString()}</td>
+                <td className="text-muted" style={{ fontSize: 12 }}>{fmt(sale.created_at)}</td>
+                <td>
+                  <button
+                    className="btn btn-sm btn-outline-secondary"
+                    data-bs-toggle="modal"
+                    data-bs-target="#sale-modal"
+                    onClick={() => setSelected(sale)}
                   >
-                    <td className="text-center text-muted" style={{ fontSize: 12 }}>
-                      {isOpen ? '▼' : '▶'}
-                    </td>
-                    <td className="text-muted">{(page - 1) * perPage + i + 1}</td>
-                    <td>
-                      <div className="fw-medium">{sale.player_name}</div>
-                      <div className="text-muted" style={{ fontSize: 12 }}>#{sale.player_id}</div>
-                    </td>
-                    <td>
-                      <span className={`badge rounded-pill ${
-                        sale.sale_type === 'SellAll'
-                          ? 'bg-warning-subtle text-warning-emphasis'
-                          : 'bg-info-subtle text-info-emphasis'
-                      }`}>
-                        {sale.sale_type}
-                      </span>
-                    </td>
-                    <td className="text-end font-monospace">{sale.total_sold}</td>
-                    <td className="text-end font-monospace">{sale.total_cash_received.toLocaleString()}</td>
-                    <td className="text-muted" style={{ fontSize: 12 }}>{fmt(sale.created_at)}</td>
-                  </tr>
-
-                  {isOpen && (
-                    <tr>
-                      <td colSpan={7} className="p-0">
-                        <div className="px-4 py-3" style={{ background: 'rgba(255,255,255,0.03)', borderTop: '1px solid var(--bs-border-color-translucent)' }}>
-                          {(sale.characters ?? []).length === 0 ? (
-                            <span className="text-muted small">No character data</span>
-                          ) : (
-                            <table className="table table-sm mb-0" style={{ fontSize: 13 }}>
-                              <thead>
-                                <tr>
-                                  <th className="text-muted fw-normal">Character</th>
-                                  <th className="text-muted fw-normal">Level</th>
-                                  <th className="text-muted fw-normal">Mutation</th>
-                                  <th className="text-muted fw-normal text-end">Cash</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {(sale.characters ?? []).map(c => (
-                                  <tr key={c.id}>
-                                    <td className="fw-medium">{c.character_name}</td>
-                                    <td className="font-monospace">{c.level}</td>
-                                    <td>
-                                      <span className="badge bg-primary-subtle text-primary-emphasis">
-                                        {c.mutation}
-                                      </span>
-                                    </td>
-                                    <td className="text-end font-monospace">{c.cash_received.toLocaleString()}</td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </Fragment>
-              )
-            })}
+                    ···
+                  </button>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
 
       <Pagination page={page} total={filtered.length} perPage={perPage}
         onPageChange={setPage} onPerPageChange={setPerPage} />
+
+      {/* Shared modal */}
+      <div className="modal fade" id="sale-modal" tabIndex={-1}>
+        <div className="modal-dialog modal-lg modal-dialog-scrollable">
+          <div className="modal-content">
+            {selected && <SaleModal sale={selected} />}
+          </div>
+        </div>
+      </div>
     </>
   )
 }
