@@ -1,0 +1,67 @@
+import { type NextRequest } from 'next/server'
+import { createAdminSupabaseClient } from '@/lib/supabase'
+import { validateRobloxApiKey, unauthorized } from '@/lib/auth'
+import type { EventPayload } from '@/lib/types'
+
+export async function POST(request: NextRequest) {
+  if (!validateRobloxApiKey(request)) return unauthorized()
+
+  let body: EventPayload
+  try {
+    body = await request.json()
+  } catch {
+    return Response.json({ error: 'Invalid JSON' }, { status: 400 })
+  }
+
+  const supabase = createAdminSupabaseClient()
+
+  const { data: event, error: eventError } = await supabase
+    .from('player_events')
+    .insert({
+      player_name: body.player_name,
+      player_id: body.player_id,
+      event_type: body.event_type,
+      cash: body.cash,
+      highest_wave: body.highest_wave,
+      total_kills: body.total_kills,
+      joined_at: body.joined_at,
+      left_at: body.left_at ?? null,
+      session_duration_seconds: body.session_duration_seconds ?? null,
+    })
+    .select('id')
+    .single()
+
+  if (eventError || !event) {
+    return Response.json({ error: eventError?.message ?? 'Insert failed' }, { status: 500 })
+  }
+
+  const eventId = event.id
+
+  const writes: PromiseLike<unknown>[] = []
+
+  if (body.inventory?.length) {
+    writes.push(
+      supabase
+        .from('player_inventory')
+        .insert(body.inventory.map((c) => ({ ...c, event_id: eventId })))
+    )
+  }
+  if (body.items?.length) {
+    writes.push(
+      supabase
+        .from('player_items')
+        .insert(body.items.map((i) => ({ ...i, event_id: eventId })))
+    )
+  }
+  if (body.equipped?.length) {
+    writes.push(
+      supabase
+        .from('player_equipped')
+        .insert(body.equipped.map((e) => ({ ...e, event_id: eventId })))
+    )
+  }
+
+  await Promise.all(writes)
+
+  return Response.json({ id: eventId }, { status: 201 })
+}
