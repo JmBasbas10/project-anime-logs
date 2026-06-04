@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { LayoutList, Gift, Server, Users, LogOut } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { createBrowserSupabaseClient } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 
 const navItems = [
@@ -19,9 +18,9 @@ export function Sidebar() {
   const router = useRouter()
 
   async function handleSignOut() {
-    const supabase = createBrowserSupabaseClient()
-    await supabase.auth.signOut()
+    await fetch('/api/auth/logout', { method: 'POST' })
     router.push('/auth/login')
+    router.refresh()
   }
 
   return (

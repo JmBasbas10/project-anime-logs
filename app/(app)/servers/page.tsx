@@ -1,11 +1,11 @@
-import { createServerSupabaseClient } from '@/lib/supabase'
+import { createAdminSupabaseClient } from '@/lib/supabase'
 import { ServersList } from '@/components/servers/servers-list'
 import type { Server } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
 
 export default async function ServersPage() {
-  const supabase = await createServerSupabaseClient()
+  const supabase = createAdminSupabaseClient()
 
   const { data, error } = await supabase
     .from('servers')

@@ -1,11 +1,11 @@
-import { createServerSupabaseClient } from '@/lib/supabase'
+import { createAdminSupabaseClient } from '@/lib/supabase'
 import { LogsTable } from '@/components/logs/logs-table'
 import type { PlayerEventWithSnapshot } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
 
 export default async function LogsPage() {
-  const supabase = await createServerSupabaseClient()
+  const supabase = createAdminSupabaseClient()
 
   const { data, error } = await supabase
     .from('player_events')

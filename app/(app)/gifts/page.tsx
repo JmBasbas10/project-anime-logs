@@ -1,11 +1,11 @@
-import { createServerSupabaseClient } from '@/lib/supabase'
+import { createAdminSupabaseClient } from '@/lib/supabase'
 import { GiftsTable } from '@/components/gifts/gifts-table'
 import type { GiftLog } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
 
 export default async function GiftsPage() {
-  const supabase = await createServerSupabaseClient()
+  const supabase = createAdminSupabaseClient()
 
   const { data, error } = await supabase
     .from('gift_logs')

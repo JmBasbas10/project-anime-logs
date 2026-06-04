@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { createServerSupabaseClient } from '@/lib/supabase'
+import { createAdminSupabaseClient } from '@/lib/supabase'
 import { PlayerTimeline } from '@/components/players/player-timeline'
 import type { PlayerEventWithSnapshot } from '@/lib/types'
 import { ArrowLeft } from 'lucide-react'
@@ -15,7 +15,7 @@ export default async function PlayerPage({ params }: Props) {
   const { username } = await params
   const decoded = decodeURIComponent(username)
 
-  const supabase = await createServerSupabaseClient()
+  const supabase = createAdminSupabaseClient()
 
   const { data, error } = await supabase
     .from('player_events')
