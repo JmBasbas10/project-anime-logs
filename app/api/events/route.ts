@@ -35,5 +35,32 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: error?.message ?? 'Insert failed' }, { status: 500 })
   }
 
-  return Response.json({ id: event.id }, { status: 201 })
+  const eventId = event.id
+  const writes: PromiseLike<unknown>[] = []
+
+  if (body.inventory?.length) {
+    writes.push(
+      supabase.from('player_inventory').insert(
+        body.inventory.map(c => ({ ...c, event_id: eventId }))
+      )
+    )
+  }
+  if (body.items?.length) {
+    writes.push(
+      supabase.from('player_items').insert(
+        body.items.map(i => ({ ...i, event_id: eventId }))
+      )
+    )
+  }
+  if (body.equipped?.length) {
+    writes.push(
+      supabase.from('player_equipped').insert(
+        body.equipped.map(e => ({ ...e, event_id: eventId }))
+      )
+    )
+  }
+
+  await Promise.all(writes)
+
+  return Response.json({ id: eventId }, { status: 201 })
 }

@@ -1,6 +1,6 @@
 export type EventType = 'join' | 'leave'
 
-// ── player_events (join / leave only) ────────────────────────────────────────
+// ── player_events + child snapshot tables ────────────────────────────────────
 export interface PlayerEvent {
   id: string
   player_name: string
@@ -15,6 +15,39 @@ export interface PlayerEvent {
   created_at: string
 }
 
+export interface PlayerInventory {
+  id: string
+  event_id: string
+  character_name: string
+  character_id: string
+  level: number
+  mutation: string
+  trait: string
+}
+
+export interface PlayerItem {
+  id: string
+  event_id: string
+  item_name: string
+  quantity: number
+}
+
+export interface PlayerEquipped {
+  id: string
+  event_id: string
+  character_name: string
+  character_id: string
+  level: number
+  mutation: string
+  trait: string
+}
+
+export interface PlayerEventWithSnapshot extends PlayerEvent {
+  inventory: PlayerInventory[]
+  items: PlayerItem[]
+  equipped: PlayerEquipped[]
+}
+
 export interface EventPayload {
   event_type: EventType
   player_name: string
@@ -25,6 +58,9 @@ export interface EventPayload {
   joined_at: string
   left_at?: string
   session_duration_seconds?: number
+  inventory: Array<Omit<PlayerInventory, 'id' | 'event_id'>>
+  items: Array<Omit<PlayerItem, 'id' | 'event_id'>>
+  equipped: Array<Omit<PlayerEquipped, 'id' | 'event_id'>>
 }
 
 // ── player_snapshots + child tables ──────────────────────────────────────────
