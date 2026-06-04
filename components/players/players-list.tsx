@@ -26,7 +26,7 @@ interface Props {
 export function PlayersList({ players }: Props) {
   const [search, setSearch]     = useState('')
   const [page, setPage]         = useState(1)
-  const [perPage, setPerPage]   = useState(25)
+  const [perPage, setPerPage]   = useState(10)
   const [sort, setSort]         = useState<'last_seen' | 'cash' | 'wave' | 'kills' | 'events'>('last_seen')
   const router = useRouter()
 

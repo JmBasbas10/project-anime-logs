@@ -41,7 +41,7 @@ export function GiftsTable({ gifts }: Props) {
   const [selected, setSelected] = useState<GiftLog | null>(null)
   const [search, setSearch]     = useState('')
   const [page, setPage]         = useState(1)
-  const [perPage, setPerPage]   = useState(25)
+  const [perPage, setPerPage]   = useState(10)
 
   const filtered = search.trim()
     ? gifts.filter(g =>

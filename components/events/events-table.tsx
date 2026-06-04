@@ -104,7 +104,7 @@ export function EventsTable({ events }: Props) {
   const [tab, setTab]             = useState<'all' | 'join' | 'leave'>('all')
   const [search, setSearch]       = useState('')
   const [page, setPage]           = useState(1)
-  const [perPage, setPerPage]     = useState(25)
+  const [perPage, setPerPage]     = useState(10)
 
   const afterTab = events.filter(e => tab === 'all' ? true : e.event_type === tab)
   const afterSearch = search.trim()

@@ -66,7 +66,7 @@ export function LogsTable({ snapshots }: Props) {
   const [selected, setSelected] = useState<PlayerSnapshotWithData | null>(null)
   const [search, setSearch]   = useState('')
   const [page, setPage]       = useState(1)
-  const [perPage, setPerPage] = useState(25)
+  const [perPage, setPerPage] = useState(10)
 
   const filtered = search.trim()
     ? snapshots.filter(s =>
