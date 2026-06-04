@@ -44,10 +44,15 @@ export async function POST(request: NextRequest) {
   const supabase = createAdminSupabaseClient()
   const { error } = await supabase.from('gift_logs').insert(
     body.gifts.map((g) => ({
-      player_name: g.player_name,
-      player_id: g.player_id,
-      gift_item: g.gift_item,
-      gift_value: g.gift_value,
+      giver_name:     g.giver_name,
+      giver_id:       g.giver_id,
+      receiver_name:  g.receiver_name,
+      receiver_id:    g.receiver_id,
+      character_name: g.character_name,
+      character_id:   g.character_id,
+      level:          g.level,
+      mutation:       g.mutation,
+      trait:          g.trait,
       ...(g.timestamp ? { created_at: g.timestamp } : {}),
     }))
   )

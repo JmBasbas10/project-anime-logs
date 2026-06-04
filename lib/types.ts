@@ -125,22 +125,33 @@ export interface BatchPayload {
   players: BatchPlayerPayload[]
 }
 
-// ── gift_logs ─────────────────────────────────────────────────────────────────
+// ── gift_logs (character transfer between two players) ───────────────────────
 export interface GiftLog {
   id: string
-  player_name: string
-  player_id: number
-  gift_item: string
-  gift_value: number
+  giver_name: string
+  giver_id: number
+  receiver_name: string
+  receiver_id: number
+  character_name: string
+  character_id: string
+  level: number
+  mutation: string
+  trait: string
   created_at: string
+  archived?: boolean
 }
 
 export interface BulkGiftPayload {
   gifts: Array<{
-    player_name: string
-    player_id: number
-    gift_item: string
-    gift_value: number
+    giver_name: string
+    giver_id: number
+    receiver_name: string
+    receiver_id: number
+    character_name: string
+    character_id: string
+    level: number
+    mutation: string
+    trait: string
     timestamp?: string
   }>
 }
