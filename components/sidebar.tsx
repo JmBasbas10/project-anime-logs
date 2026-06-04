@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 
@@ -14,7 +15,7 @@ const navItems = [
   { href: '/players',   label: 'Players',   icon: '👤' },
 ]
 
-function NavLinks({ pathname, dismiss }: { pathname: string; dismiss?: boolean }) {
+function NavLinks({ pathname }: { pathname: string }) {
   return (
     <>
       {navItems.map(({ href, label, icon }) => {
@@ -23,7 +24,6 @@ function NavLinks({ pathname, dismiss }: { pathname: string; dismiss?: boolean }
           <Link
             key={href}
             href={href}
-            {...(dismiss ? { 'data-bs-dismiss': 'offcanvas' } : {})}
             className="d-flex align-items-center gap-3 px-3 py-2 rounded-2 mb-1 text-decoration-none"
             style={{
               fontSize: 14,
@@ -45,6 +45,19 @@ function NavLinks({ pathname, dismiss }: { pathname: string; dismiss?: boolean }
 export function Sidebar() {
   const pathname = usePathname()
   const router   = useRouter()
+
+  // Close the mobile offcanvas after navigation completes, using Bootstrap's
+  // own API so the backdrop and body styles are cleaned up (avoids stuck overlay).
+  useEffect(() => {
+    const el = document.getElementById('sidebar-offcanvas')
+    if (!el) return
+    const bs = (window as unknown as { bootstrap?: { Offcanvas?: { getInstance: (e: Element) => { hide: () => void } | null } } }).bootstrap
+    bs?.Offcanvas?.getInstance(el)?.hide()
+    // Safety net: remove any orphaned backdrop / body locks
+    document.querySelectorAll('.offcanvas-backdrop').forEach(b => b.remove())
+    document.body.style.removeProperty('overflow')
+    document.body.style.removeProperty('padding-right')
+  }, [pathname])
 
   async function handleSignOut() {
     await fetch('/api/auth/logout', { method: 'POST' })
@@ -98,7 +111,7 @@ export function Sidebar() {
         </div>
         <div className="offcanvas-body d-flex flex-column p-2">
           <nav className="flex-grow-1">
-            <NavLinks pathname={pathname} dismiss />
+            <NavLinks pathname={pathname} />
           </nav>
           <div className="px-1 py-2 border-top mt-2">
             <button className="btn btn-sm w-100 text-secondary" style={{ textAlign: 'left', fontSize: 13 }} onClick={handleSignOut}>
