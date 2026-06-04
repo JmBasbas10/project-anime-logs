@@ -1,67 +1,108 @@
 'use client'
 
-import { Fragment, useState } from 'react'
+import { useState } from 'react'
 import type { PlayerSnapshotWithData } from '@/lib/types'
-
-type Filter = 'all' | string   // 'all' or a player name search string
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleString()
 }
 
-function SnapshotDetail({ snapshot }: { snapshot: PlayerSnapshotWithData }) {
+function SnapshotModalBody({ snap }: { snap: PlayerSnapshotWithData }) {
   return (
-    <div className="row g-3 p-2">
-      <div className="col-12 col-md-4">
-        <p className="text-uppercase text-muted small fw-semibold mb-2">Inventory</p>
-        {snapshot.inventory.length === 0 ? (
-          <span className="text-muted small">None</span>
-        ) : (
-          <ul className="list-unstyled mb-0">
-            {snapshot.inventory.map((c, i) => (
-              <li key={i} className="small mb-1">
-                <span className="fw-medium">{c.character_name}</span>
-                <span className="text-muted ms-2">
-                  Lv{c.level} · {c.mutation} · {c.trait}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
+    <>
+      <div className="modal-header">
+        <div>
+          <h5 className="modal-title fw-bold mb-0">{snap.player_name}</h5>
+          <div className="text-muted small">#{snap.player_id} · {formatDate(snap.batch_timestamp)}</div>
+        </div>
+        <button type="button" className="btn-close" data-bs-dismiss="modal" />
       </div>
-      <div className="col-12 col-md-4">
-        <p className="text-uppercase text-muted small fw-semibold mb-2">Items</p>
-        {snapshot.items.length === 0 ? (
-          <span className="text-muted small">None</span>
-        ) : (
-          <ul className="list-unstyled mb-0">
-            {snapshot.items.map((item, i) => (
-              <li key={i} className="small mb-1">
-                <span className="fw-medium">{item.item_name}</span>
-                <span className="text-muted ms-2">×{item.quantity}</span>
-              </li>
-            ))}
-          </ul>
-        )}
+      <div className="modal-body">
+        {/* Stats row */}
+        <div className="row g-2 mb-4">
+          {[
+            { label: 'Cash', value: snap.cash.toLocaleString() },
+            { label: 'Highest Wave', value: snap.highest_wave },
+            { label: 'Total Kills', value: snap.total_kills.toLocaleString() },
+          ].map(({ label, value }) => (
+            <div key={label} className="col-4">
+              <div className="card text-center py-2 px-1">
+                <div className="fw-bold font-monospace fs-5">{value}</div>
+                <div className="text-muted small">{label}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="row g-3">
+          {/* Inventory */}
+          <div className="col-12 col-md-4">
+            <p className="text-uppercase text-muted fw-semibold mb-2" style={{ fontSize: 11, letterSpacing: 1 }}>
+              Inventory ({snap.inventory.length})
+            </p>
+            {snap.inventory.length === 0 ? (
+              <span className="text-muted small">None</span>
+            ) : (
+              <ul className="list-unstyled mb-0">
+                {snap.inventory.map((c, i) => (
+                  <li key={i} className="mb-2">
+                    <div className="fw-medium small">{c.character_name}</div>
+                    <div className="text-muted" style={{ fontSize: 11 }}>
+                      Lv{c.level} · {c.mutation} · {c.trait}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* Items */}
+          <div className="col-12 col-md-4">
+            <p className="text-uppercase text-muted fw-semibold mb-2" style={{ fontSize: 11, letterSpacing: 1 }}>
+              Items ({snap.items.length})
+            </p>
+            {snap.items.length === 0 ? (
+              <span className="text-muted small">None</span>
+            ) : (
+              <ul className="list-unstyled mb-0">
+                {snap.items.map((item, i) => (
+                  <li key={i} className="mb-2">
+                    <div className="fw-medium small">{item.item_name}</div>
+                    <div className="text-muted" style={{ fontSize: 11 }}>×{item.quantity}</div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* Equipped */}
+          <div className="col-12 col-md-4">
+            <p className="text-uppercase text-muted fw-semibold mb-2" style={{ fontSize: 11, letterSpacing: 1 }}>
+              Equipped ({snap.equipped.length})
+            </p>
+            {snap.equipped.length === 0 ? (
+              <span className="text-muted small">None</span>
+            ) : (
+              <ul className="list-unstyled mb-0">
+                {snap.equipped.map((c, i) => (
+                  <li key={i} className="mb-2">
+                    <div className="fw-medium small">{c.character_name}</div>
+                    <div className="text-muted" style={{ fontSize: 11 }}>
+                      Lv{c.level} · {c.mutation} · {c.trait}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
       </div>
-      <div className="col-12 col-md-4">
-        <p className="text-uppercase text-muted small fw-semibold mb-2">Equipped</p>
-        {snapshot.equipped.length === 0 ? (
-          <span className="text-muted small">None</span>
-        ) : (
-          <ul className="list-unstyled mb-0">
-            {snapshot.equipped.map((c, i) => (
-              <li key={i} className="small mb-1">
-                <span className="fw-medium">{c.character_name}</span>
-                <span className="text-muted ms-2">
-                  Lv{c.level} · {c.mutation} · {c.trait}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
+      <div className="modal-footer">
+        <button type="button" className="btn btn-secondary btn-sm" data-bs-dismiss="modal">
+          Close
+        </button>
       </div>
-    </div>
+    </>
   )
 }
 
@@ -70,16 +111,8 @@ interface Props {
 }
 
 export function LogsTable({ snapshots }: Props) {
-  const [expanded, setExpanded] = useState<Set<string>>(new Set())
+  const [selected, setSelected] = useState<PlayerSnapshotWithData | null>(null)
   const [search, setSearch] = useState('')
-
-  function toggle(id: string) {
-    setExpanded((prev) => {
-      const next = new Set(prev)
-      next.has(id) ? next.delete(id) : next.add(id)
-      return next
-    })
-  }
 
   const filtered = search.trim()
     ? snapshots.filter(
@@ -90,8 +123,8 @@ export function LogsTable({ snapshots }: Props) {
     : snapshots
 
   return (
-    <div>
-      {/* Search bar */}
+    <>
+      {/* Search */}
       <div className="mb-3">
         <input
           type="text"
@@ -103,60 +136,59 @@ export function LogsTable({ snapshots }: Props) {
         />
       </div>
 
-      <div className="table-responsive">
-        <table className="table table-dark table-hover table-bordered align-middle mb-0">
-          <thead className="table-secondary">
+      {/* Table */}
+      <div className="table-responsive rounded border">
+        <table className="table table-hover table-bordered mb-0" style={{ fontSize: 14 }}>
+          <thead className="table-dark">
             <tr>
-              <th style={{ width: 32 }} />
               <th>Player</th>
               <th className="text-end">Cash</th>
               <th className="text-end">Wave</th>
               <th className="text-end">Kills</th>
               <th>Batch Time</th>
+              <th style={{ width: 80 }}></th>
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={6} className="text-center text-muted py-4">
-                  No snapshots found
-                </td>
+                <td colSpan={6} className="text-center text-muted py-4">No snapshots found</td>
               </tr>
             )}
-            {filtered.map((snap) => {
-              const isOpen = expanded.has(snap.id)
-              return (
-                <Fragment key={snap.id}>
-                  <tr
-                    role="button"
-                    onClick={() => toggle(snap.id)}
-                    style={{ cursor: 'pointer', userSelect: 'none' }}
+            {filtered.map((snap) => (
+              <tr key={snap.id}>
+                <td>
+                  <div className="fw-medium">{snap.player_name}</div>
+                  <div className="text-muted" style={{ fontSize: 12 }}>#{snap.player_id}</div>
+                </td>
+                <td className="text-end font-monospace">{snap.cash.toLocaleString()}</td>
+                <td className="text-end font-monospace">{snap.highest_wave}</td>
+                <td className="text-end font-monospace">{snap.total_kills.toLocaleString()}</td>
+                <td className="text-muted" style={{ fontSize: 12 }}>{formatDate(snap.batch_timestamp)}</td>
+                <td className="text-center">
+                  <button
+                    className="btn btn-sm btn-outline-primary"
+                    data-bs-toggle="modal"
+                    data-bs-target="#snapshot-modal"
+                    onClick={() => setSelected(snap)}
                   >
-                    <td className="text-center text-muted small">{isOpen ? '▼' : '▶'}</td>
-                    <td>
-                      <div className="fw-medium">{snap.player_name}</div>
-                      <div className="text-muted small">#{snap.player_id}</div>
-                    </td>
-                    <td className="text-end font-monospace">{snap.cash.toLocaleString()}</td>
-                    <td className="text-end font-monospace">{snap.highest_wave}</td>
-                    <td className="text-end font-monospace">{snap.total_kills.toLocaleString()}</td>
-                    <td className="text-muted small">{formatDate(snap.batch_timestamp)}</td>
-                  </tr>
-                  {isOpen && (
-                    <tr>
-                      <td colSpan={6} className="p-0">
-                        <div className="p-3" style={{ backgroundColor: 'rgba(255,255,255,0.03)' }}>
-                          <SnapshotDetail snapshot={snap} />
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </Fragment>
-              )
-            })}
+                    View
+                  </button>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
-    </div>
+
+      {/* Single shared modal */}
+      <div className="modal fade" id="snapshot-modal" tabIndex={-1}>
+        <div className="modal-dialog modal-lg modal-dialog-scrollable">
+          <div className="modal-content">
+            {selected && <SnapshotModalBody snap={selected} />}
+          </div>
+        </div>
+      </div>
+    </>
   )
 }

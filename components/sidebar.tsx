@@ -4,10 +4,11 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 
 const navItems = [
-  { href: '/logs', label: 'Snapshots', icon: '📋' },
-  { href: '/gifts', label: 'Gifts', icon: '🎁' },
-  { href: '/servers', label: 'Servers', icon: '🖥️' },
-  { href: '/players', label: 'Players', icon: '👤' },
+  { href: '/events', label: 'Events', icon: '⚡', desc: 'Join / leave' },
+  { href: '/logs', label: 'Snapshots', icon: '📋', desc: 'Batch data' },
+  { href: '/gifts', label: 'Gifts', icon: '🎁', desc: 'Transactions' },
+  { href: '/servers', label: 'Servers', icon: '🖥️', desc: 'Active servers' },
+  { href: '/players', label: 'Players', icon: '👤', desc: 'Lookup' },
 ]
 
 export function Sidebar() {
@@ -22,34 +23,48 @@ export function Sidebar() {
 
   return (
     <div
-      className="d-flex flex-column flex-shrink-0 p-3 border-end"
-      style={{ width: '220px', minHeight: '100vh', backgroundColor: 'var(--bs-body-bg)' }}
+      className="d-flex flex-column flex-shrink-0 border-end"
+      style={{ width: 210, minHeight: '100vh', backgroundColor: 'var(--bs-body-bg)' }}
     >
-      <div className="mb-3 pb-3 border-bottom">
-        <span className="fw-bold fs-5">🎮 Anime Logs</span>
-        <div className="text-muted small">Roblox Dashboard</div>
+      {/* Brand */}
+      <div className="px-3 py-3 border-bottom">
+        <div className="fw-bold fs-6">🎮 Anime Logs</div>
+        <div className="text-muted" style={{ fontSize: 11 }}>Roblox Dashboard</div>
       </div>
 
-      <ul className="nav nav-pills flex-column mb-auto gap-1">
-        {navItems.map(({ href, label, icon }) => (
-          <li key={href} className="nav-item">
+      {/* Nav */}
+      <nav className="flex-grow-1 p-2">
+        {navItems.map(({ href, label, icon, desc }) => {
+          const active = pathname.startsWith(href)
+          return (
             <Link
+              key={href}
               href={href}
-              className={`nav-link d-flex align-items-center gap-2 ${
-                pathname.startsWith(href) ? 'active' : 'text-secondary'
+              className={`d-flex align-items-center gap-2 px-3 py-2 rounded mb-1 text-decoration-none ${
+                active
+                  ? 'bg-primary text-white'
+                  : 'text-secondary'
               }`}
+              style={{ fontSize: 14 }}
             >
-              <span>{icon}</span>
-              {label}
+              <span style={{ fontSize: 16 }}>{icon}</span>
+              <div>
+                <div className="fw-medium lh-1">{label}</div>
+                <div className={`lh-1 mt-1 ${active ? 'text-white opacity-75' : 'text-muted'}`} style={{ fontSize: 11 }}>
+                  {desc}
+                </div>
+              </div>
             </Link>
-          </li>
-        ))}
-      </ul>
+          )
+        })}
+      </nav>
 
-      <div className="mt-auto pt-3 border-top">
+      {/* Sign out */}
+      <div className="p-2 border-top">
         <button
           className="btn btn-outline-secondary btn-sm w-100"
           onClick={handleSignOut}
+          style={{ fontSize: 13 }}
         >
           Sign out
         </button>

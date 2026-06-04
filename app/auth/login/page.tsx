@@ -2,9 +2,6 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 export default function LoginPage() {
   const [password, setPassword] = useState('')
@@ -33,34 +30,46 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <Card className="w-full max-w-sm">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Anime Logs</CardTitle>
-          <CardDescription>Enter the dashboard password to continue</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-3">
-            <Input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoFocus
-            />
+    <div className="min-vh-100 d-flex align-items-center justify-content-center">
+      <div className="card shadow" style={{ width: 380 }}>
+        <div className="card-body p-4">
+          <div className="text-center mb-4">
+            <div className="fs-1 mb-1">🎮</div>
+            <h1 className="h4 fw-bold mb-1">Anime Logs</h1>
+            <p className="text-muted small mb-0">Enter the dashboard password to continue</p>
+          </div>
+
+          <form onSubmit={handleSubmit}>
+            <div className="mb-3">
+              <input
+                type="password"
+                className="form-control"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoFocus
+              />
+            </div>
             {error && (
-              <p className="text-sm text-destructive">{error}</p>
+              <div className="alert alert-danger py-2 small">{error}</div>
             )}
-            <Button
+            <button
               type="submit"
-              className="w-full"
+              className="btn btn-primary w-100"
               disabled={!password || loading}
             >
-              {loading ? 'Signing in…' : 'Sign in'}
-            </Button>
+              {loading ? (
+                <>
+                  <span className="spinner-border spinner-border-sm me-2" />
+                  Signing in…
+                </>
+              ) : (
+                'Sign in'
+              )}
+            </button>
           </form>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   )
 }
