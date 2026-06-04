@@ -9,6 +9,7 @@ const navItems = [
   { href: '/gifts',     label: 'Gifts',     icon: '🎁' },
   { href: '/sales',     label: 'Sales',     icon: '💰' },
   { href: '/purchases', label: 'Purchases', icon: '🛒' },
+  { href: '/revenue',   label: 'Revenue',   icon: '📈' },
   { href: '/servers',   label: 'Servers',   icon: '🖥️' },
   { href: '/players',   label: 'Players',   icon: '👤' },
 ]
