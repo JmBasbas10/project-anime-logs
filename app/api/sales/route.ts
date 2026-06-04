@@ -7,6 +7,7 @@ interface SaleCharacterPayload {
   character_id: string
   level: number
   mutation: string
+  trait: string
   cash_received: number
 }
 
@@ -82,6 +83,7 @@ export async function POST(request: NextRequest) {
           character_id:   c.character_id,
           level:          c.level,
           mutation:       c.mutation,
+          trait:          c.trait,
           cash_received:  c.cash_received,
         }))
       )

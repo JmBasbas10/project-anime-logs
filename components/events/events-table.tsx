@@ -10,7 +10,10 @@ function dur(s: number | null) {
   return `${Math.floor(s / 60)}m ${s % 60}s`
 }
 
-function SnapshotSection({ title, rows }: { title: string; rows: { name: string; detail: string }[] }) {
+function SnapshotSection({ title, rows }: {
+  title: string
+  rows: { name: string; character_id?: string; detail: string }[]
+}) {
   return (
     <div className="col-12 col-md-4">
       <p className="fw-semibold text-uppercase text-muted mb-2" style={{ fontSize: 11, letterSpacing: 1 }}>
@@ -23,6 +26,9 @@ function SnapshotSection({ title, rows }: { title: string; rows: { name: string;
           {rows.map((r, i) => (
             <li key={i} className="mb-2">
               <div className="fw-medium small">{r.name}</div>
+              {r.character_id && (
+                <div className="text-muted font-monospace" style={{ fontSize: 10 }}>{r.character_id}</div>
+              )}
               <div className="text-muted" style={{ fontSize: 11 }}>{r.detail}</div>
             </li>
           ))}
@@ -78,7 +84,7 @@ function EventModal({ event }: { event: PlayerEventWithSnapshot }) {
         <div className="row g-3">
           <SnapshotSection
             title="Inventory"
-            rows={event.inventory.map(c => ({ name: c.character_name, detail: `Lv${c.level} · ${c.mutation} · ${c.trait}` }))}
+            rows={event.inventory.map(c => ({ name: c.character_name, character_id: c.character_id, detail: `Lv${c.level} · ${c.mutation} · ${c.trait}` }))}
           />
           <SnapshotSection
             title="Items"
@@ -86,7 +92,7 @@ function EventModal({ event }: { event: PlayerEventWithSnapshot }) {
           />
           <SnapshotSection
             title="Equipped"
-            rows={event.equipped.map(c => ({ name: c.character_name, detail: `Lv${c.level} · ${c.mutation} · ${c.trait}` }))}
+            rows={event.equipped.map(c => ({ name: c.character_name, character_id: c.character_id, detail: `Lv${c.level} · ${c.mutation} · ${c.trait}` }))}
           />
         </div>
       </div>

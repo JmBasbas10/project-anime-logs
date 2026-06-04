@@ -33,9 +33,9 @@ function SnapshotModal({ snap }: { snap: PlayerSnapshotWithData }) {
         </div>
         <div className="row g-3">
           {[
-            { title: `Inventory (${snap.inventory.length})`, rows: snap.inventory.map(c => ({ n: c.character_name, d: `Lv${c.level} · ${c.mutation} · ${c.trait}` })) },
-            { title: `Items (${snap.items.length})`,         rows: snap.items.map(i => ({ n: i.item_name, d: `×${i.quantity}` })) },
-            { title: `Equipped (${snap.equipped.length})`,   rows: snap.equipped.map(c => ({ n: c.character_name, d: `Lv${c.level} · ${c.mutation} · ${c.trait}` })) },
+            { title: `Inventory (${snap.inventory.length})`, rows: snap.inventory.map(c => ({ n: c.character_name, id: c.character_id, d: `Lv${c.level} · ${c.mutation} · ${c.trait}` })) },
+            { title: `Items (${snap.items.length})`,         rows: snap.items.map(i => ({ n: i.item_name, id: null, d: `×${i.quantity}` })) },
+            { title: `Equipped (${snap.equipped.length})`,   rows: snap.equipped.map(c => ({ n: c.character_name, id: c.character_id, d: `Lv${c.level} · ${c.mutation} · ${c.trait}` })) },
           ].map(({ title, rows }) => (
             <div key={title} className="col-12 col-md-4">
               <p className="fw-semibold text-uppercase text-muted mb-2" style={{ fontSize: 11, letterSpacing: 1 }}>{title}</p>
@@ -44,6 +44,7 @@ function SnapshotModal({ snap }: { snap: PlayerSnapshotWithData }) {
                   {rows.map((r, i) => (
                     <li key={i} className="mb-2">
                       <div className="fw-medium small">{r.n}</div>
+                      {r.id && <div className="text-muted font-monospace" style={{ fontSize: 10 }}>{r.id}</div>}
                       <div className="text-muted" style={{ fontSize: 11 }}>{r.d}</div>
                     </li>
                   ))}

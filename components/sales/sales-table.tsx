@@ -10,6 +10,7 @@ export interface SaleCharacter {
   character_id: string
   level: number
   mutation: string
+  trait: string
   cash_received: number
 }
 
@@ -74,8 +75,10 @@ function SaleModal({ sale }: { sale: CharacterSale }) {
             <thead style={{ background: 'var(--bs-tertiary-bg)' }}>
               <tr>
                 <th>Character</th>
+                <th className="text-muted" style={{ fontSize: 11 }}>ID</th>
                 <th>Level</th>
                 <th>Mutation</th>
+                <th>Trait</th>
                 <th className="text-end">Cash</th>
               </tr>
             </thead>
@@ -83,9 +86,13 @@ function SaleModal({ sale }: { sale: CharacterSale }) {
               {chars.map(c => (
                 <tr key={c.id}>
                   <td className="fw-medium">{c.character_name}</td>
+                  <td className="text-muted font-monospace" style={{ fontSize: 11 }}>{c.character_id}</td>
                   <td className="font-monospace">{c.level}</td>
                   <td>
                     <span className="badge bg-primary-subtle text-primary-emphasis">{c.mutation}</span>
+                  </td>
+                  <td>
+                    <span className="badge bg-secondary-subtle text-secondary-emphasis">{c.trait ?? '—'}</span>
                   </td>
                   <td className="text-end font-monospace">{c.cash_received.toLocaleString()}</td>
                 </tr>

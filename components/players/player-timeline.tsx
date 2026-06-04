@@ -56,6 +56,7 @@ export function PlayerTimeline({ username, snapshots }: Props) {
                     title="Inventory"
                     rows={snap.inventory.map((c) => ({
                       name: c.character_name,
+                      character_id: c.character_id,
                       detail: `Lv${c.level} · ${c.mutation} · ${c.trait}`,
                     }))}
                   />
@@ -70,6 +71,7 @@ export function PlayerTimeline({ username, snapshots }: Props) {
                     title="Equipped"
                     rows={snap.equipped.map((c) => ({
                       name: c.character_name,
+                      character_id: c.character_id,
                       detail: `Lv${c.level} · ${c.mutation} · ${c.trait}`,
                     }))}
                   />
@@ -83,7 +85,10 @@ export function PlayerTimeline({ username, snapshots }: Props) {
   )
 }
 
-function SnapshotCol({ title, rows }: { title: string; rows: { name: string; detail: string }[] }) {
+function SnapshotCol({ title, rows }: {
+  title: string
+  rows: { name: string; character_id?: string; detail: string }[]
+}) {
   return (
     <div className="col-12 col-md-4">
       <p className="text-uppercase text-muted small fw-semibold mb-2">{title}</p>
@@ -92,9 +97,12 @@ function SnapshotCol({ title, rows }: { title: string; rows: { name: string; det
       ) : (
         <ul className="list-unstyled mb-0">
           {rows.map((row, i) => (
-            <li key={i} className="small mb-1">
-              <span className="fw-medium">{row.name}</span>
-              <span className="text-muted ms-2">{row.detail}</span>
+            <li key={i} className="mb-2">
+              <div className="fw-medium small">{row.name}</div>
+              {row.character_id && (
+                <div className="text-muted font-monospace" style={{ fontSize: 10 }}>{row.character_id}</div>
+              )}
+              <div className="text-muted" style={{ fontSize: 11 }}>{row.detail}</div>
             </li>
           ))}
         </ul>
