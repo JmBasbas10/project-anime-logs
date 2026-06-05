@@ -11,7 +11,7 @@ export default async function GiftsPage() {
     .from('gift_logs')
     .select('*')
     .order('created_at', { ascending: false })
-    .limit(500)
+    .limit(200)
 
   const gifts = (data as GiftLog[]) ?? []
   const uniqueGivers = new Set(gifts.map(g => g.giver_id)).size

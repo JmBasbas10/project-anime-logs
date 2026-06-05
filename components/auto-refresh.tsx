@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-const INTERVAL_MS = 30_000
+const INTERVAL_MS = 60_000
 
 export function AutoRefresh() {
   const router = useRouter()
@@ -17,8 +17,8 @@ export function AutoRefresh() {
       return
     }
     timer.current = setInterval(() => {
-      // Skip refresh while a modal is open so it doesn't close under the user
-      if (document.querySelector('.modal.show')) return
+      // Avoid database reads while the dashboard is not visible or a modal is open.
+      if (document.hidden || document.querySelector('.modal.show')) return
       setRefreshing(true)
       router.refresh()
       // brief visual pulse; server re-render resolves quickly for small queries
@@ -33,7 +33,7 @@ export function AutoRefresh() {
       className={`btn btn-sm ${enabled ? 'btn-outline-success' : 'btn-outline-secondary'} d-flex align-items-center gap-1`}
       style={{ fontSize: 12 }}
       onClick={() => setEnabled(v => !v)}
-      title={enabled ? 'Auto-refresh every 30s (on)' : 'Auto-refresh (off)'}
+      title={enabled ? 'Auto-refresh every 60s (on)' : 'Auto-refresh (off)'}
     >
       <span
         className="rounded-circle"

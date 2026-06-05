@@ -2,63 +2,60 @@ import { type NextRequest } from 'next/server'
 import { createAdminSupabaseClient } from '@/lib/supabase'
 import { validateRobloxApiKey, unauthorized } from '@/lib/auth'
 import type { BatchPayload } from '@/lib/types'
+import {
+  chunksOf,
+  inputErrorResponse,
+  readJsonBody,
+  requireBoundedArray,
+} from '@/lib/api-utils'
 
 export async function POST(request: NextRequest) {
   if (!validateRobloxApiKey(request)) return unauthorized()
 
   let body: BatchPayload
   try {
-    body = await request.json()
-  } catch {
-    return Response.json({ error: 'Invalid JSON' }, { status: 400 })
+    body = await readJsonBody<BatchPayload>(request)
+    requireBoundedArray(body.players, 'players', 100)
+  } catch (error) {
+    return inputErrorResponse(error)
   }
 
   const { timestamp, players } = body
-  if (!Array.isArray(players) || players.length === 0) {
-    return Response.json({ error: 'players array is required' }, { status: 400 })
-  }
-
   const supabase = createAdminSupabaseClient()
+  const snapshots = players.map((player) => ({
+    id: crypto.randomUUID(),
+    player_id: player.player_id,
+    player_name: player.player_name,
+    cash: player.cash,
+    highest_wave: player.highest_wave,
+    total_kills: player.total_kills,
+    batch_timestamp: timestamp,
+  }))
 
-  // 1 — insert all snapshot rows and get their IDs back
-  const { data: snapshots, error: snapErr } = await supabase
-    .from('player_snapshots')
-    .insert(
-      players.map((p) => ({
-        player_id: p.player_id,
-        player_name: p.player_name,
-        cash: p.cash,
-        highest_wave: p.highest_wave,
-        total_kills: p.total_kills,
-        batch_timestamp: timestamp,
-      }))
-    )
-    .select('id, player_id')
-
-  if (snapErr || !snapshots) {
-    return Response.json({ error: snapErr?.message ?? 'Snapshot insert failed' }, { status: 500 })
+  const { error: snapshotError } = await supabase.from('player_snapshots').insert(snapshots)
+  if (snapshotError) {
+    return Response.json({ error: 'Snapshot insert failed' }, { status: 500 })
   }
 
-  // Build a map player_id → snapshot_id (last write wins for duplicates in same batch)
-  const idMap = new Map<number, string>(snapshots.map((s) => [s.player_id as number, s.id as string]))
-
-  // 2 — bulk insert child tables in parallel
-  const allInventory = players.flatMap((p) =>
-    (p.inventory ?? []).map((c) => ({ ...c, snapshot_id: idMap.get(p.player_id) }))
+  const allInventory = players.flatMap((player, index) =>
+    (player.inventory ?? []).map((row) => ({ ...row, snapshot_id: snapshots[index].id }))
   )
-  const allItems = players.flatMap((p) =>
-    (p.items ?? []).map((i) => ({ ...i, snapshot_id: idMap.get(p.player_id) }))
+  const allItems = players.flatMap((player, index) =>
+    (player.items ?? []).map((row) => ({ ...row, snapshot_id: snapshots[index].id }))
   )
-  const allEquipped = players.flatMap((p) =>
-    (p.equipped ?? []).map((e) => ({ ...e, snapshot_id: idMap.get(p.player_id) }))
+  const allEquipped = players.flatMap((player, index) =>
+    (player.equipped ?? []).map((row) => ({ ...row, snapshot_id: snapshots[index].id }))
   )
 
-  const writes: PromiseLike<unknown>[] = []
-  if (allInventory.length) writes.push(supabase.from('snapshot_inventory').insert(allInventory))
-  if (allItems.length) writes.push(supabase.from('snapshot_items').insert(allItems))
-  if (allEquipped.length) writes.push(supabase.from('snapshot_equipped').insert(allEquipped))
+  const childResults = await Promise.all([
+    ...chunksOf(allInventory).map((rows) => supabase.from('snapshot_inventory').insert(rows)),
+    ...chunksOf(allItems).map((rows) => supabase.from('snapshot_items').insert(rows)),
+    ...chunksOf(allEquipped).map((rows) => supabase.from('snapshot_equipped').insert(rows)),
+  ])
 
-  await Promise.all(writes)
+  if (childResults.some((result) => result.error)) {
+    return Response.json({ error: 'One or more snapshot detail inserts failed' }, { status: 500 })
+  }
 
   return Response.json({ ok: true, count: players.length }, { status: 201 })
 }

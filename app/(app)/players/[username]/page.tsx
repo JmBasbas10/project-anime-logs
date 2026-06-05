@@ -21,6 +21,7 @@ export default async function PlayerPage({ params }: Props) {
     .from('player_snapshots')
     .select(`*, inventory:snapshot_inventory(*), items:snapshot_items(*), equipped:snapshot_equipped(*)`)
     .order('batch_timestamp', { ascending: false })
+    .limit(200)
 
   const { data, error } = await (isId
     ? query.eq('player_id', Number(decoded))

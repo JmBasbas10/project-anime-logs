@@ -87,11 +87,11 @@ export function PlayersList({ players }: Props) {
             <tr>
               <th style={{ width: 40 }} className="text-muted">#</th>
               <th>Player</th>
-              <SortTh label="Cash"   col="cash" />
-              <SortTh label="Wave"   col="wave" />
-              <SortTh label="Kills"  col="kills" />
-              <SortTh label="Events" col="events" />
-              <SortTh label="Last Seen" col="last_seen" />
+              {SortTh({ label: 'Cash', col: 'cash' })}
+              {SortTh({ label: 'Wave', col: 'wave' })}
+              {SortTh({ label: 'Kills', col: 'kills' })}
+              {SortTh({ label: 'Events', col: 'events' })}
+              {SortTh({ label: 'Last Seen', col: 'last_seen' })}
               <th style={{ width: 60 }}></th>
             </tr>
           </thead>

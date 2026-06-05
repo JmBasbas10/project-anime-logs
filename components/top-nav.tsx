@@ -1,6 +1,7 @@
 'use client'
 
 import { AutoRefresh } from '@/components/auto-refresh'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 export function TopNav() {
   return (
@@ -22,7 +23,10 @@ export function TopNav() {
         <span className="fw-bold d-md-none">🎮 Anime Logs</span>
       </div>
 
-      <AutoRefresh />
+      <div className="d-flex align-items-center gap-2">
+        <ThemeToggle />
+        <AutoRefresh />
+      </div>
     </nav>
   )
 }

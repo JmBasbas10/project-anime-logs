@@ -9,17 +9,28 @@ export async function validateDashboardSession(req: NextRequest): Promise<boolea
 
 export function validateRobloxApiKey(req: NextRequest): boolean {
   const key = req.headers.get('x-api-key')
-  return !!key && key === process.env.ROBLOX_API_SECRET
+  const validKeys = [
+    process.env.ROBLOX_API_SECRET,
+    process.env.ROBLOX_API_SECRET_PREVIOUS,
+  ].filter(Boolean)
+  return !!key && validKeys.includes(key)
 }
 
 export function validateReadApiKey(req: NextRequest): boolean {
   const key = req.headers.get('x-api-key')
   return (
     !!key &&
-    (key === process.env.ROBLOX_API_SECRET || key === process.env.DISCORD_BOT_API_KEY)
+    (
+      key === process.env.ROBLOX_API_SECRET ||
+      key === process.env.ROBLOX_API_SECRET_PREVIOUS ||
+      key === process.env.DISCORD_BOT_API_KEY
+    )
   )
 }
 
-export function unauthorized(message = 'Unauthorized') {
-  return Response.json({ error: message }, { status: 401 })
+export function unauthorized(message = 'Unauthorized', requestId?: string) {
+  return Response.json(
+    { error: message, ...(requestId ? { request_id: requestId } : {}) },
+    { status: 401, headers: requestId ? { 'x-request-id': requestId } : undefined }
+  )
 }

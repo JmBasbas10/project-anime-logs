@@ -13,7 +13,15 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" data-bs-theme="dark" className={geistMono.variable}>
+    <html lang="en" data-bs-theme="dark" className={`${geistMono.variable} dark`} suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{var t=localStorage.getItem('dashboard-theme');if(t==='light'){document.documentElement.dataset.bsTheme='light';document.documentElement.classList.remove('dark')}}catch(e){}",
+          }}
+        />
+      </head>
       <body className="bg-body text-body">
         <BootstrapJs />
         {children}

@@ -102,7 +102,12 @@ export function LogsTable({ snapshots }: Props) {
   const [perPage, setPerPage]           = useState(10)
 
   function toggleLocal(id: string) {
-    setArchivedIds(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
+    setArchivedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
   }
 
   const afterArchive = showArchived ? snapshots.filter(s => archivedIds.has(s.id)) : snapshots.filter(s => !archivedIds.has(s.id))

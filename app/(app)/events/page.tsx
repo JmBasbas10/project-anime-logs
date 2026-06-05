@@ -11,7 +11,7 @@ export default async function EventsPage() {
     .from('player_events')
     .select(`*, inventory:player_inventory(*), items:player_items(*), equipped:player_equipped(*)`)
     .order('created_at', { ascending: false })
-    .limit(500)
+    .limit(200)
 
   const events = (data as PlayerEventWithSnapshot[]) ?? []
   const joins  = events.filter(e => e.event_type === 'join').length

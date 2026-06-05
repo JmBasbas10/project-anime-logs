@@ -9,7 +9,7 @@ export default async function SalesPage() {
     .from('character_sales')
     .select('*, characters:sale_characters(*)')
     .order('created_at', { ascending: false })
-    .limit(500)
+    .limit(200)
 
   const sales = (data as CharacterSale[]) ?? []
   const totalCash    = sales.reduce((s, r) => s + (r.total_cash_received ?? 0), 0)

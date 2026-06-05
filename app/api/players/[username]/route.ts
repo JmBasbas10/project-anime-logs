@@ -18,6 +18,7 @@ export async function GET(
     .from('player_events')
     .select(`*, inventory:player_inventory(*), items:player_items(*), equipped:player_equipped(*)`)
     .order('created_at', { ascending: false })
+    .limit(200)
 
   const { data, error } = await (isId
     ? query.eq('player_id', Number(decoded))

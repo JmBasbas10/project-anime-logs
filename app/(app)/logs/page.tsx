@@ -11,7 +11,7 @@ export default async function LogsPage() {
     .from('player_snapshots')
     .select(`*, inventory:snapshot_inventory(*), items:snapshot_items(*), equipped:snapshot_equipped(*)`)
     .order('batch_timestamp', { ascending: false })
-    .limit(500)
+    .limit(200)
 
   const snapshots = (data as PlayerSnapshotWithData[]) ?? []
   const uniquePlayers = new Set(snapshots.map(s => s.player_id)).size

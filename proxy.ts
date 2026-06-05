@@ -3,10 +3,10 @@ import { verifySessionToken, SESSION_COOKIE } from '@/lib/session'
 
 const PUBLIC_PREFIXES = ['/auth', '/api']
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  if (PUBLIC_PREFIXES.some((p) => pathname.startsWith(p))) {
+  if (PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix))) {
     return NextResponse.next()
   }
 

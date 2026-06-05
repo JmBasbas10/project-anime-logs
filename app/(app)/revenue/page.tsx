@@ -12,7 +12,7 @@ export default async function RevenuePage() {
     .from('product_purchases')
     .select('*')
     .order('created_at', { ascending: false })
-    .limit(2000)
+    .limit(1000)
 
   const purchases = (data as ProductPurchase[]) ?? []
   const totalRobux = purchases.reduce((s, p) => s + p.robux_spent, 0)

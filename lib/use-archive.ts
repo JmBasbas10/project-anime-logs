@@ -25,7 +25,8 @@ export function useArchive<T extends HasIdArchived>(table: ArchiveTable, rows: T
     const willArchive = !archivedIds.has(id)
     setArchivedIds(prev => {
       const next = new Set(prev)
-      willArchive ? next.add(id) : next.delete(id)
+      if (willArchive) next.add(id)
+      else next.delete(id)
       return next
     })
     await fetch('/api/archive', {
